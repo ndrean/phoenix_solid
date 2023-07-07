@@ -1,0 +1,49 @@
+<h1>Google LOGIN</h1>
+<script src="https://accounts.google.com/gsi/client" async defer>
+</script>
+<div
+  id="g_id_onload"
+  data-client_id={System.get_env("GOOGLE_CLIENT_ID")}
+  data-context="signin"
+  data-ux_mode="popup"
+  data-login_uri="/auth/one_tap"
+  data-nonce=""
+  data-itp_support="true"
+>
+</div>
+
+<div
+  class="g_id_signin"
+  data-type="standard"
+  data-shape="pill"
+  data-theme="filled_blue"
+  data-text="signin_with"
+  data-size="large"
+  data-logo_alignment="left"
+  data-width="300"
+>
+</div>
+<h1>Facebook LOGIN</h1>
+<%!-- <script>
+  window.app_id="<%= assigns[:app_id] %>";
+</script>
+<div id="fb-root"></div>
+<script
+  async
+  defer
+  crossorigin="anonymous"
+  src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v17.0&appId=1297741021040518&autoLogAppEvents=1"
+  nonce="pRZuXkLN"
+>
+</script>
+
+<div
+  class="fb-login-button"
+  data-width=""
+  data-size=""
+  data-button-type=""
+  data-layout=""
+  data-auto-logout-link="true"
+  data-use-continue-as="false"
+>
+</div> --%>
