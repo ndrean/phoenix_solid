@@ -1,7 +1,24 @@
 defmodule ElixirGoogleCerts do
+  @moduledoc """
+  Dependencies on Jason and Finch. You can change the HTTP client in the function "fetch".
+  """
   @g_certs3_url "https://www.googleapis.com/oauth2/v3/certs"
   @iss "https://accounts.google.com"
 
+  @doc """
+  Takes the conn, the JWT token and the g_csrf_token returned by Google as params to the POST endpoint.
+  It renders `{:ok, profil}` or `{:error, reason}`.
+
+  ## Example
+
+      iex>
+      def handle(conn, %{"credential" => jwt, "g_csrf_token" => g_csrf_token}) do
+        with {:ok, profile} <- ElixirGoogleCerts.verified_identity(conn, jwt, g_csrf_token) do
+          %{email: email, name: _name, google_id: _sub, picture: _pic} = profile
+          ...
+      end
+
+  """
   def verified_identity(conn, jwt, g_csrf_token) do
     with :ok <- double_token_check(conn, g_csrf_token),
          {:ok,
@@ -31,9 +48,7 @@ defmodule ElixirGoogleCerts do
 
       {:ok, %{"kid" => kid, "alg" => alg}} ->
         with {:ok, %{body: body}} <-
-               Finch.build(:get, @g_certs3_url)
-               |> Finch.request(PhxSolid.Finch) do
-          IO.inspect(body, label: "body")
+               fetch(@g_certs3_url) do
           %{"keys" => certs} = Jason.decode!(body)
           cert = Enum.find(certs, fn cert -> cert["kid"] == kid end)
           signer = Joken.Signer.create(alg, cert)
@@ -42,6 +57,12 @@ defmodule ElixirGoogleCerts do
           {:error, msg} -> {:error, msg}
         end
     end
+  end
+
+  # decouple from HTTP client
+  defp fetch(url) do
+    Finch.build(:get, url)
+    |> Finch.request(PhxSolid.Finch)
   end
 
   # token in body is equal to received cookie

@@ -15,7 +15,6 @@ defmodule PhxSolidWeb.OneTapController do
       # |> put_session(:user_id, user.id)
       |> put_session(:profile, profile)
       |> put_session(:origin, "google_sdk")
-      # |> put_view(LiveMapWeb.WelcomeView)
       |> redirect(to: ~p"/welcome")
       |> halt()
     end
