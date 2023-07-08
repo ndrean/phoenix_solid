@@ -71,7 +71,7 @@ mix spa
 
 To enable **Google One tap**, you need the module `:google_certs` and add dependencies:
 
-```iex
+```elixir
 {:jason, "~> 1.4"},{:joken, "~> 2.5"}
 ```
 
@@ -197,4 +197,10 @@ We could set up a Genserver, an Agent, an ETS table, a Redis session or use the 
 
 ## Serving static files
 
-We could further reduce the load on the Phoenix backend by using a reverse proxy (Nginx, Caddy). It would serve the static files and pass the WS connections and HTTP connections to the backend.
+We could further reduce the load on the Phoenix backend by using a reverse proxy (Nginx > Caddy) with cache control. It would serve the static files and pass the WS connections and HTTP connections to the backend.
+
+See `nginx` conf. Run below to reload, test and set the local "config.conf" file.
+
+```bash
+nginx -s reload -c $(pwd)/config.conf -t
+```
