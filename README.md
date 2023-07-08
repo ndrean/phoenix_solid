@@ -57,6 +57,26 @@ config :phx_solid,
   spa_dir: "./priv/static/spa/"
 ```
 
+### Static files config
+
+- `Vite`: use `base: "/spa" to pass the correct path in the build.
+
+```js
+export default defineConfig({
+  plugins: [solidPlugin()],
+  base: "/spa/",
+  build: {
+    target: "esnext",
+  },
+});
+```
+
+- `Phoenix`: in the module "app_web.ex", add to "static_paths"
+
+```elixir
+def static_paths, do: ~w(assets fonts images favicon.ico robots.txt) ++ ["spa"]
+```
+
 ### Build and copy the SPA into "priv/static"
 
 We will compile the JS/CSS and copy the files into the folder `Application.compile_env!(:phx_solid, :spa_dir)`.
