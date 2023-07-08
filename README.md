@@ -48,7 +48,7 @@ This simple pattern saves from having to use complicated global state managers. 
 
 ## Phoenix renders the SPA
 
-```iex
+```elixir
 # config.exs
 config :phx_solid,
   google_client_id: System.get_env("GOOGLE_CLIENT_ID"),
@@ -87,14 +87,14 @@ You set up a "one_tap_controller". It is a POST endpoint and will receive the re
 
 In the `router` module, you will set the CSP as per [Google's recommendations](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid#content_security_policy)
 
-```iex
+```elixir
 plug(
   :put_secure_browser_headers,
   %{"content-security-policy-report-only" => @csp}
 )
 ```
 
-```iex
+```elixir
 @csp "
 script-src https://accounts.google.com/gsi/client;
 frame-src https://accounts.google.com/gsi/;
@@ -112,7 +112,7 @@ We set up an endpoint "/spa" to render the SPA. The corresponding controller wil
 
 We also inject a `user_token` into this file, attached to the `window` object. It will be run as a script for the DOM to read it. This token is generated using the profil's email (collected with our **signin** in the "one_tap_controller") and `App.Endpoint` (since `conn` won't be available):
 
-```iex
+```elixir
 Phoenix.Token.sign(PhxSolidWeb.Endpoint,"user_token", email )
 ```
 
@@ -194,3 +194,7 @@ mix phx.gen.channel Counter
 ## State persistence
 
 We could set up a Genserver, an Agent, an ETS table, a Redis session or use the database. If the app is distributed, most probably Redis or the database should be used.
+
+## Serving static files
+
+We could further reduce the load on the Phoenix backend by using a reverse proxy (Nginx, Caddy). It would serve the static files and pass the WS connections and HTTP connections to the backend.
