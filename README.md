@@ -85,6 +85,19 @@ You set up a "one_tap_controller". It is a POST endpoint and will receive a resp
 
 <img width="502" alt="Screenshot 2023-07-07 at 16 51 37" src="https://github.com/ndrean/phoenix_solid/assets/6793008/b07428c8-1722-49f9-9003-6f9b513eb1e4">
 
+### Source .env
+
+```bash
+.env
+export GOOGLE_CLIENT_ID=xxx
+export GOOGLE_CLIENT_SECRET=xxx
+```
+
+Do:
+
+```bash
+source .env
+```
 
 ### Content Secuity Policy
 
