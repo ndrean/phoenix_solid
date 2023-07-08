@@ -8,7 +8,6 @@ defmodule PhxSolid.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Start the Telemetry supervisor
       PhxSolidWeb.Telemetry,
       # Start the Ecto repository
       # PhxSolid.Repo,

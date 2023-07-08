@@ -12,13 +12,13 @@
 }
 
 .phoenix {
-  height: 40vmin;
+  height: 4vmin;
   pointer-events: none;
 }
 
 .solid {
   animation: logo-spin infinite 20s linear;
-  height: 40vmin;
+  height: 20vmin;
   pointer-events: none;
 }
 

@@ -19,7 +19,7 @@ defmodule PhxSolid.MixProject do
   def application do
     [
       mod: {PhxSolid.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :os_mon]
     ]
   end
 
@@ -50,7 +50,10 @@ defmodule PhxSolid.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.4"},
       {:joken, "~> 2.5"},
-      {:plug_cowboy, "~> 2.5"}
+      {:plug_cowboy, "~> 2.5"},
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:sobelow, "~> 0.11.1", only: [:dev]}
     ]
   end
 

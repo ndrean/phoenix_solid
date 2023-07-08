@@ -7,7 +7,7 @@ defmodule PhxSolidWeb.Router do
   #        "frame-src https://accounts.google.com/gsi/;" <>
   #        "connect-src https://accounts.google.com/gsi/;"
 
-  @csp "script-src https://accounts.google.com/gsi/client; frame-src https://accounts.google.com/gsi/; connect-src https://accounts.google.com/gsi/;"
+  # @csp "script-src https://accounts.google.com/gsi/client; frame-src https://accounts.google.com/gsi/; connect-src https://accounts.google.com/gsi/;"
 
   pipeline :browser do
     plug :accepts, ["html"]
