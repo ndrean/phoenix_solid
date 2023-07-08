@@ -2,7 +2,7 @@
 
 We present a Phoenix app that starts are a normal SSR app and renders an SPA.
 
-Once anthenticated with a sign-in, the user can access to the SPA, powered by SolidJS.
+Once authenticated with a sign-in, the user can access to the SPA, powered by SolidJS.
 
 This SPA will communicate with this node via sockets, more precisely over a channel. The node will save the state of the SPA.
 
@@ -39,12 +39,12 @@ const Component = component(context)
 <Component ...>{props.children} </Component>
 ```
 
-We can put in the context anything we want to share. It can be a global state, CSS themes...
-The component will not be reactive to the context: it will however read them it whenever it renders.
+We can put in the "context" object anything we want to share. It can be a global state, CSS themes...
+The component will not be reactive to the context: it will however read it whenever it renders.
 
-This is useful when you navigate in an SPA. Whenever you visit a new page with components, these components function will run, thus read the context. If we change a state in a page and pass it to the context, and if another component in this new page uses this state, it will render update-to-date data.
+This is useful when you navigate in an SPA. Whenever you visit a new page with components, these components' functions will run, thus read the context. If we change a state in a page and pass it to the context, and if another component in this new page uses this state, it will render update-to-date data.
 
-This simple pattern saves from having to use complicated global state managers. However, if you have several intricated components in the same page, then the context pattern is useless and you still need a global state for this page to render the components.
+This simple pattern saves from having to use complicated global state managers. However, if you have several intricated components on the same page, then the context pattern is useless and you still need a global state for this page to render the components.
 
 ## Phoenix renders the SPA
 
@@ -61,7 +61,7 @@ config :phx_solid,
 
 We will compile the JS/CSS and copy the files into the folder `Application.compile_env!(:phx_solid, :spa_dir)`.
 
-We set up a "mix task" to compile and copy. It uses behaviour "Mix.Task" and provides a `call/1` function to run theses tasks.
+We set up a "mix task" to compile and copy. It uses the behaviour "Mix.Task" and provides a `call/1` function to run these tasks.
 
 ```bash
 mix spa
@@ -75,15 +75,18 @@ To enable **Google One tap**, you need the module `:google_certs` and add depend
 {:jason, "~> 1.4"},{:joken, "~> 2.5"}
 ```
 
-You will crendetials from Google.
+You will credentials from Google.
 
 - create a project in the <https://console.cloud.google.com>
 - then create credentials as a **web application**
 - ⚠️ the "Authorized Javascript origins" should contain **2** fields, with AND without the port.
 
-You set up a "one_tap_controller". It is a POST endpoint and will receive the response from Google. It will set a `user_token` and the users' `profile` in the session, and redirect to a "welcome" page.
+You set up a "one_tap_controller". It is a POST endpoint and will receive a response from Google. It will set a `user_token` and the users' `profile` in the session, and redirect to a "welcome" page.
 
-### Content Seucity Policy
+<img width="502" alt="Screenshot 2023-07-07 at 16 51 37" src="https://github.com/ndrean/phoenix_solid/assets/6793008/b07428c8-1722-49f9-9003-6f9b513eb1e4">
+
+
+### Content Secuity Policy
 
 In the `router` module, you will set the CSP as per [Google's recommendations](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid#content_security_policy)
 
@@ -110,7 +113,7 @@ The compiled files are located in the "priv/state/spa" (declared in our "config.
 
 We set up an endpoint "/spa" to render the SPA. The corresponding controller will read the compiled "index.html" + associated JS + CSS files and render with `Phoenix.Controller.html(conn, file)`.
 
-We also inject a `user_token` into this file, attached to the `window` object. It will be run as a script for the DOM to read it. This token is generated using the profil's email (collected with our **signin** in the "one_tap_controller") and `App.Endpoint` (since `conn` won't be available):
+We also inject a `user_token` into this file, attached to the `window` object. It will be run as a script for the DOM to read it. This token is generated using the profile's email (collected with our **sign in** in the "one_tap_controller") and `App.Endpoint` (since `conn` won't be available):
 
 ```elixir
 Phoenix.Token.sign(PhxSolidWeb.Endpoint,"user_token", email )
@@ -145,7 +148,7 @@ socket.connect();
 export { socket };
 ```
 
-We also built a helper `useChannel`. It attaches a channel to the socket with a topic and returns the channel, ready to be used (`.on`, `.push`). Use it every time you need to communicate with the backend. It has a cleaning stage in its life-cycle.
+We also built a helper `useChannel`. It attaches a channel to the socket with a topic and returns the channel, ready to be used (`.on`, `.push`). Use it every time you need to communicate with the backend. It has a cleaning stage in its life cycle.
 
 #### Server-side
 
@@ -170,7 +173,7 @@ The connection should be fine now.
 
 ## Channels
 
-A channel is an Elixir process derived from a Genserver: it is therefor capable of emitting and receiving messages.
+A channel is an Elixir process derived from a Genserver: it is therefore capable of emitting and receiving messages.
 A channel is uniquely identified by a string and attached to the `socket` which accepts a list of channels.
 
 ```js
@@ -180,7 +183,7 @@ const ctxCh = socket.channel("ctx", {})
 const countCh = socket.channel("counter", {})
 ```
 
-The channels are set up to persist some state within the SPA.
+The channels are set up to persist state within the SPA.
 
 - Whenever we `push` data through a channel client-side, its alter ego server-side will receive it in a callback `handle_in`.
 - we can push data from the server to the client through the socket with a `broadcast` related to a topic. The client will receive it with the listener `mychannel.on`.
