@@ -71,7 +71,7 @@ export default defineConfig({
 });
 ```
 
-- `Phoenix`: in the module "app_web.ex", add to "static_paths"
+- `Phoenix`: in the module "app_web.ex", add the folder "spa" to "static_paths"
 
 ```elixir
 def static_paths, do: ~w(assets fonts images favicon.ico robots.txt) ++ ["spa"]
