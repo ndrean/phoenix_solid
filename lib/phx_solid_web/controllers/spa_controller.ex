@@ -38,18 +38,20 @@ defmodule PhxSolidWeb.SPAController do
         rescue
           e ->
             Logger.error("#{__MODULE__}: #{inspect(e.reason)}")
-            return(conn)
+            return(conn, "#{inspect(e.reason)}")
         end
 
       false ->
-        Logger.error("Need to login to access here")
-        return(conn)
+        return(conn, "Unauthorized: need to login to access here")
     end
   end
 
-  defp return(conn) do
+  defp return(conn, msg) do
     conn
+    |> clear_flash()
+    |> put_flash(:error, msg)
+    |> Plug.Conn.put_status(401)
     |> redirect(to: ~p"/")
-    |> halt()
+    |> Plug.Conn.halt()
   end
 end

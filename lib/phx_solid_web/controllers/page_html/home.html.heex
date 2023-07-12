@@ -1,28 +1,31 @@
-<h1>Google LOGIN</h1>
-<script src="https://accounts.google.com/gsi/client" async defer>
-</script>
-<div
-  id="g_id_onload"
-  data-client_id={System.get_env("GOOGLE_CLIENT_ID")}
-  data-context="signin"
-  data-ux_mode="popup"
-  data-login_uri="/auth/one_tap"
-  data-nonce=""
-  data-itp_support="true"
->
-</div>
+<section class="bg-no-repeat bg-contain" style="background-image: url('/images/rendering.png')">
+  <h1>Google LOGIN</h1>
+  <br />
+  <script src="https://accounts.google.com/gsi/client" async defer>
+  </script>
+  <div
+    id="g_id_onload"
+    data-client_id={System.get_env("GOOGLE_CLIENT_ID")}
+    data-context="signin"
+    data-ux_mode="popup"
+    data-login_uri="/auth/one_tap"
+    data-nonce=""
+    data-itp_support="true"
+  >
+  </div>
 
-<div
-  class="g_id_signin"
-  data-type="standard"
-  data-shape="pill"
-  data-theme="filled_blue"
-  data-text="signin_with"
-  data-size="large"
-  data-logo_alignment="left"
-  data-width="300"
->
-</div>
+  <div
+    class="g_id_signin"
+    data-type="standard"
+    data-shape="pill"
+    data-theme="filled_blue"
+    data-text="signin_with"
+    data-size="large"
+    data-logo_alignment="left"
+    data-width="300"
+  >
+  </div>
+</section>
 <%!-- <script>
   window.app_id="<%= assigns[:app_id] %>";
 </script>

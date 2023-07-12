@@ -1,4 +1,4 @@
-defmodule PhxSolidpWeb.LoginErrorController do
+defmodule PhxSolidWeb.LoginErrorController do
   # use Phoenix.Controller
   use PhxSolidWeb, :controller
   require Logger

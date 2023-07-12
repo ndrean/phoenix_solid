@@ -1,0 +1,29 @@
+localhost:80 {
+    encode gzip
+
+
+    @static {
+            file
+            path *.ico *.css *.js *.gif *.webp *.avif *.jpg *.jpeg *.png *.svg *.woff *.woff2
+    }
+
+    header @static Cache-Control max-age=5184000
+
+
+    handle_path /spa/ {
+        root * /priv/static/spa
+        file_server
+        header {
+            Cache-Control "public"
+            Expires "max"
+        }
+    }
+
+
+    handle  {
+        reverse_proxy localhost:4000
+    }
+}
+
+
+ 

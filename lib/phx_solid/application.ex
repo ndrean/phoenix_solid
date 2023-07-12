@@ -7,10 +7,12 @@ defmodule PhxSolid.Application do
 
   @impl true
   def start(_type, _args) do
+    PhxSolid.Release.migrate()
+
     children = [
       PhxSolidWeb.Telemetry,
       # Start the Ecto repository
-      # PhxSolid.Repo,
+      PhxSolid.Repo,
       # Start the PubSub system
       {Phoenix.PubSub, name: PhxSolid.PubSub},
       # Start Finch

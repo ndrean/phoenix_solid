@@ -35,8 +35,8 @@ defmodule PhxSolidWeb.UserSocket do
   @impl true
   def connect(%{"token" => token} = _params, socket, _info) do
     case verify(socket, token) do
-      {:ok, user_name} ->
-        socket = assign(socket, user_name: user_name, user_token: token)
+      {:ok, email} ->
+        socket = assign(socket, email: email, user_token: token)
         {:ok, socket}
 
       {:error, err} ->
@@ -51,7 +51,8 @@ defmodule PhxSolidWeb.UserSocket do
   end
 
   defp verify(_socket, token) do
-    Phoenix.Token.verify(PhxSolidWeb.Endpoint, "user token", token, max_age: 86_400)
+    PhxSolid.Token.user_check(token)
+    # Phoenix.Token.verify(PhxSolidWeb.Endpoint, "user token", token, max_age: 86_400)
   end
 
   # Socket id's are topics that allow you to identify all sockets for a given user:

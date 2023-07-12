@@ -4,44 +4,6 @@ defmodule PhxSolid.Token do
   """
 
   @doc """
-  Generate a token for a mail given a user and an event
-
-  ### Example
-
-  ```
-  iex> token = PhxSolid.Token.mail_generate(%{user_id: 1, event_id: 1})
-  ```
-  """
-  def mail_generate(%{user_id: user_id, event_id: event_id}) do
-    Phoenix.Token.sign(
-      PhxSolidWeb.Endpoint,
-      "mail token",
-      "user_id=#{user_id}&event_id=#{event_id}"
-    )
-  end
-
-  @doc """
-  Checks the received token with salt "mail token"
-
-  ### Example
-  ```
-  iex> {:ok, token} = PhxSolid.Token.mail_check("SFMyNTY.g2gDbQAAABR1c2VyX2lk...")
-  ```
-  """
-  def mail_check(token) do
-    case Phoenix.Token.verify(
-           PhxSolidWeb.Endpoint,
-           "mail token",
-           token,
-           # 2 months!
-           max_age: 5_000_000
-         ) do
-      {:ok, data} -> {:ok, data}
-      {:error, reason} -> {:error, reason}
-    end
-  end
-
-  @doc """
   Generates a token from a user.id
 
   ### Example

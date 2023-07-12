@@ -20,20 +20,25 @@ if System.get_env("PHX_SERVER") do
   config :phx_solid, PhxSolidWeb.Endpoint, server: true
 end
 
+# check MCrumm https://gist.github.com/mcrumm/98059439c673be7e0484589162a54a01
 if config_env() == :prod do
-  database_url =
+  # raise """
+  # environment variable DATABASE_URL is missing.
+  # For example: ecto://USER:PASS@HOST/DATABASE
+  # """
+  database_path =
     System.get_env("DATABASE_URL") ||
       raise """
-      environment variable DATABASE_URL is missing.
-      For example: ecto://USER:PASS@HOST/DATABASE
+      env var DATABASE_PATH is missing
       """
 
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
   config :phx_solid, PhxSolid.Repo,
     # ssl: true,
-    url: database_url,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+    database: database_path,
+    # url: database_url,
+    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "5"),
     socket_options: maybe_ipv6
 
   # The secret key base is used to sign/encrypt cookies and other secrets.

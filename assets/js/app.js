@@ -14,7 +14,8 @@ import "./user_socket.js";
 //
 //     import "some-package"
 //
-import { Facebook } from "./facebook";
+// import { Facebook } from "./facebook";
+import { SolidAppHook } from "./solidAppHook.js";
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
 import "phoenix_html";
 // Establish Phoenix Socket and LiveView configuration.
@@ -28,6 +29,7 @@ let csrfToken = document
 
 let liveSocket = new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
+  hooks: { SolidAppHook },
 });
 
 // Show progress bar on live navigation and form submits
@@ -51,3 +53,16 @@ if (oneTap) oneTap.dataset.login_uri = window.location.href + "auth/one_tap/";
 //  FB-SDK
 const fbutton = document.getElementById("fbhook");
 if (fbutton) Facebook(fbutton);
+
+const online = document.getElementById("online");
+const offline = document.getElementById("offline");
+if (online && offline) {
+  window.addEventListener("offline", () => {
+    online.style.display = "none";
+    offline.style.display = "";
+  });
+  window.addEventListener("online", () => {
+    online.style.display = "";
+    offline.style.display = "none";
+  });
+}
