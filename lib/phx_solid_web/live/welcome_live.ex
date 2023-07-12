@@ -8,49 +8,53 @@ defmodule PhxSolidWeb.WelcomeLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <UserProfile.show :if={!@display} profile={@profile} />
-    <.live_component :if={@display} module={SolidApp} id="solidap" user_token={@user_token} />
+    <UserProfile.show :if={!@display} profile={@profile} logs={@logs} />
+    <SolidApp.render :if={@display} />
     """
   end
 
+  # <.live_component :if={@display} module={SolidApp} id="solidap" />
+  # user_token={@user_token}
+  # main_pid={@main_pid}
+
   @impl true
   def mount(_params, session, socket) do
-    %{"user_token" => user_token, "profile" => profile} = session
+    %{"user_token" => user_token, "profile" => profile, "logs" => logs} = session
 
     if connected?(socket) do
-      Logger.info("LV Connected #{inspect(self())}")
-      :ok = PhxSolidWeb.Endpoint.subscribe("check_user")
+      Logger.info("LV Connected ******}")
+      # :ok = PhxSolidWeb.Endpoint.subscribe("check_user")
     end
 
     {:ok,
      assign(socket,
        user_token: user_token,
        profile: profile,
-       page_title: "liveview"
+       logs: logs
      )}
   end
 
   # authorization check callback for the channel "info"
-  @impl true
-  def handle_info(%{topic: "check_user", event: "check_token", payload: response}, socket) do
-    IO.inspect(
-      "LV handle_info: -----------------------------#{inspect(socket.assigns.user_token)}"
-    )
+  # def handle_info(%{topic: "check_user", event: "check_token", payload: response}, socket) do
+  #   if response["user_token"] === socket.assigns.user_token do
+  #     PhxSolidWeb.Endpoint.broadcast!("user_checked", "authorized", %{verified: :ok})
+  #   else
+  #     PhxSolidWeb.Endpoint.broadcast!("user_checked", "authorized", %{
+  #       verified: :unauthorized
+  #     })
+  #   end
 
-    if response["user_token"] === socket.assigns.user_token do
-      PhxSolidWeb.Endpoint.broadcast!("user_checked", "authorized", %{verified: :ok})
-    else
-      PhxSolidWeb.Endpoint.broadcast!("user_checked", "authorized", %{
-        verified: :unauthorized
-      })
-    end
+  #   {:noreply, socket}
+  # end
 
-    {:noreply, socket}
-  end
-
+  # the event of changing the url is captured with handle_params
   @impl true
   def handle_params(unsigned_params, _uri, socket) do
     value = Map.get(unsigned_params, "display", false)
-    {:noreply, assign(socket, display: value)}
+
+    active =
+      ["flex items-center border rounded-md p-2 mr-2", value && "bg-[bisque] text-[midnightblue]"]
+
+    {:noreply, assign(socket, display: value, active: active)}
   end
 end

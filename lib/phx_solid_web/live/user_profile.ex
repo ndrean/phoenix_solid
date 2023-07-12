@@ -2,6 +2,7 @@ defmodule PhxSolidWeb.UserProfile do
   use Phoenix.Component
 
   attr :profile, :map
+  attr :logs, :integer
 
   def show(assigns) do
     ~H"""
@@ -12,6 +13,8 @@ defmodule PhxSolidWeb.UserProfile do
       <p>You are <strong>signed in</strong> with your <strong>Account</strong> <br />
         <strong style="color:teal;"><%= @profile.email %></strong></p>
       <hr />
+      <br />
+      <p>You connected <%= @logs %> times</p>
     </div>
     """
   end

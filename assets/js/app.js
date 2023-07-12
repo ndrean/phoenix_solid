@@ -1,19 +1,7 @@
 // If you want to use Phoenix channels, run `mix help phx.gen.channel`
-// to get started and then uncomment the line below.
 import "./user_socket.js";
-
-// You can include dependencies in two ways.
-//
-// The simplest option is to put them in assets/vendor and
-// import them using relative paths:
-//
-//     import "../vendor/some-package.js"
-//
-// Alternatively, you can `npm install some-package --prefix assets` and import
-// them using a path starting with the package name:
-//
-//     import "some-package"
-//
+import toggleNav from "./toggleNav.js";
+import onlineStatus from "./onlineStatus.js";
 // import { Facebook } from "./facebook";
 import { SolidAppHook } from "./solidAppHook.js";
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
@@ -55,14 +43,6 @@ const fbutton = document.getElementById("fbhook");
 if (fbutton) Facebook(fbutton);
 
 const online = document.getElementById("online");
-const offline = document.getElementById("offline");
-if (online && offline) {
-  window.addEventListener("offline", () => {
-    online.style.display = "none";
-    offline.style.display = "";
-  });
-  window.addEventListener("online", () => {
-    online.style.display = "";
-    offline.style.display = "none";
-  });
-}
+if (online) onlineStatus(online);
+
+toggleNav();

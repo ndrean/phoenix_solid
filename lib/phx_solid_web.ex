@@ -52,7 +52,7 @@ defmodule PhxSolidWeb do
   def live_view do
     quote do
       use Phoenix.LiveView,
-        layout: {PhxSolidWeb.Layouts, :app}
+        layout: {PhxSolidWeb.Layouts, :live}
 
       unquote(html_helpers())
     end

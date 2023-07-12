@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
 
 import ImgSVG from "./imgSVG.jsx";
 import { headerCl, solidCl, appCl } from "./app_css.js";
@@ -30,6 +30,7 @@ export default function Home() {
         </p>
         <br />
 
+        <h2>Welcome {info().user}</h2>
         <p>Memory usage: {info().memory} Mo</p>
         <p>Current node: {info().curr_node}</p>
         <p>Connected nodes: {info().connected_nodes}</p>

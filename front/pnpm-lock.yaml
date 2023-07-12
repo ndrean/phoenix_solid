@@ -9,8 +9,8 @@ dependencies:
     specifier: ^0.8.2
     version: 0.8.2(solid-js@1.7.6)
   bau-solidcss:
-    specifier: ^0.1.14
-    version: 0.1.14
+    specifier: ^0.1.15
+    version: 0.1.15
   phoenix:
     specifier: ^1.7.6
     version: 1.7.6
@@ -852,8 +852,8 @@ packages:
       babel-plugin-jsx-dom-expressions: 0.36.10(@babel/core@7.22.5)
     dev: true
 
-  /bau-solidcss@0.1.14:
-    resolution: {integrity: sha512-Ps+ZsR5IigU9NmMsNfFJ5xGtX0Q7tfnFq/oQQhIOBUm1FJGoaSlsASvUt9YwOQ0ZSCfCxvWe8tw7QEpGY4Exjg==}
+  /bau-solidcss@0.1.15:
+    resolution: {integrity: sha512-mDtf2PzamXeMZGI68nOhfPggvXufR3o/Q+LwsftSsYpOx/2bqUI4WD4PnoFBh+YoTIQknDcAyS2Fp7FxmRZonQ==}
     dev: false
 
   /browserslist@4.21.9:

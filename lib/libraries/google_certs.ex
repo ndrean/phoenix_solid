@@ -50,17 +50,19 @@ defmodule ElixirGoogleCerts do
         {:error, msg}
 
       {:ok, %{"alg" => alg, "kid" => kid, "typ" => "JWT"}} ->
-        with {:ok, %{body: body}} <- fetch(@g_certs1_url, name) do
-          {true, %{fields: fields}, _} =
-            body
-            |> Jason.decode!()
-            |> Map.get(kid)
-            |> JOSE.JWK.from_pem()
-            |> JOSE.JWT.verify_strict([alg], jwt)
+        case fetch(@g_certs1_url, name) do
+          {:ok, %{body: body}} ->
+            {true, %{fields: fields}, _} =
+              body
+              |> Jason.decode!()
+              |> Map.get(kid)
+              |> JOSE.JWK.from_pem()
+              |> JOSE.JWT.verify_strict([alg], jwt)
 
-          {:ok, fields}
-        else
-          {:error, msg} -> {:error, msg}
+            {:ok, fields}
+
+          {:error, msg} ->
+            {:error, msg}
         end
     end
   end
@@ -71,14 +73,15 @@ defmodule ElixirGoogleCerts do
   #       {:error, msg}
 
   #     {:ok, %{"kid" => kid, "alg" => alg}} ->
-  #       with {:ok, %{body: body}} <-
-  #              fetch(@g_certs3_url, name) do
-  #         %{"keys" => certs} = Jason.decode!(body)
-  #         cert = Enum.find(certs, fn cert -> cert["kid"] == kid end)
-  #         signer = Joken.Signer.create(alg, cert)
-  #         Joken.verify(jwt, signer, [])
-  #       else
-  #         {:error, msg} -> {:error, msg}
+  #       case fetch(@g_certs3_url, name) do
+  #         {:ok, %{body: body}} ->
+  #           %{"keys" => certs} = Jason.decode!(body)
+  #           cert = Enum.find(certs, fn cert -> cert["kid"] == kid end)
+  #           signer = Joken.Signer.create(alg, cert)
+  #           Joken.verify(jwt, signer, [])
+
+  #         {:error, msg} ->
+  #           {:error, msg}
   #       end
   #   end
   # end

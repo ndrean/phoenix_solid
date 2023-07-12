@@ -6,6 +6,7 @@ defmodule PhxSolid.Repo.Migrations.CreateUsersTable do
       add :email, :string
       add :name, :string
       add :logs, :integer, default: 1
+      add :user_token, :string
 
       timestamps()
     end
