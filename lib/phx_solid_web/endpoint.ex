@@ -6,12 +6,13 @@ defmodule PhxSolidWeb.Endpoint do
   # Set :encryption_salt if you would also like to encrypt it.
   @session_options [
     store: :cookie,
-    key: "_phx_solid_key",
-    signing_salt: "o0DgNEhh",
+    key: "2hnCIyWkYoZfcirE9p6D4QR42nB4BlQU",
+    signing_salt: "NI8odfCu6TNF7LyYF5M0X42AyiDAz00o",
     same_site: "Lax"
   ]
 
-  socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
+  socket "/live", Phoenix.LiveView.Socket,
+    websocket: [connect_info: [:user_agent, session: @session_options]]
 
   socket "/socket", PhxSolidWeb.UserSocket,
     websocket: true,

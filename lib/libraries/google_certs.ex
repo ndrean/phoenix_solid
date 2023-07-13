@@ -1,25 +1,28 @@
 defmodule ElixirGoogleCerts do
   @moduledoc """
-  Dependencies on Jason and Finch. You can change the HTTP client in the function "fetch".
+  Elixir module to use Google One tap. You can use PEM or JWK endpoints. By default, it uses the JWK (v3) endpoint.
+
+  Dependencies on `Jason` and `Finch`. You can change the HTTP client in the function `fetch`.
   """
-  @g_certs3_url "https://www.googleapis.com/oauth2/v3/certs"
+  # auth_provider_x509_cert_url
+  @g_certs1_url "https://www.googleapis.com/oauth2/v1/certs"
+  # @g_certs3_url "https://www.googleapis.com/oauth2/v3/certs"
   @iss "https://accounts.google.com"
 
   @doc """
-  Takes the conn, the JWT token and the g_csrf_token returned by Google as params to the POST endpoint.
+  Takes the conn, the JWT token, the g_csrf_token returned by Google as params to the POST endpoint and the HTTP client name.
   It renders `{:ok, profil}` or `{:error, reason}`.
 
   ## Example
 
-      iex>
-      def handle(conn, %{"credential" => jwt, "g_csrf_token" => g_csrf_token}) do
-        with {:ok, profile} <- ElixirGoogleCerts.verified_identity(conn, jwt, g_csrf_token) do
+      iex> def handle(conn, %{"credential" => jwt, "g_csrf_token" => g_csrf_token}) do
+      with {:ok, profile} <- ElixirGoogleCerts.verified_identity(conn, jwt, g_csrf_token, MyApp.Finch) do
           %{email: email, name: _name, google_id: _sub, picture: _pic} = profile
           ...
       end
 
   """
-  def verified_identity(conn, jwt, g_csrf_token) do
+  def verified_identity(conn, jwt, g_csrf_token, name) do
     with :ok <- double_token_check(conn, g_csrf_token),
          {:ok,
           %{
@@ -31,7 +34,7 @@ defmodule ElixirGoogleCerts do
             "picture" => pic,
             "given_name" => given_name,
             "sub" => sub
-          }} <- check_identity(jwt),
+          }} <- check_identity_v1(jwt, name),
          true <- check_user(aud, azp),
          true <- check_iss(iss) do
       {:ok, %{email: email, name: name, google_id: sub, picture: pic, given_name: given_name}}
@@ -41,28 +44,52 @@ defmodule ElixirGoogleCerts do
     end
   end
 
-  defp check_identity(jwt) do
+  defp check_identity_v1(jwt, name) do
     case Joken.peek_header(jwt) do
       {:error, msg} ->
         {:error, msg}
 
-      {:ok, %{"kid" => kid, "alg" => alg}} ->
-        with {:ok, %{body: body}} <-
-               fetch(@g_certs3_url) do
-          %{"keys" => certs} = Jason.decode!(body)
-          cert = Enum.find(certs, fn cert -> cert["kid"] == kid end)
-          signer = Joken.Signer.create(alg, cert)
-          Joken.verify(jwt, signer, [])
-        else
-          {:error, msg} -> {:error, msg}
+      {:ok, %{"alg" => alg, "kid" => kid, "typ" => "JWT"}} ->
+        case fetch(@g_certs1_url, name) do
+          {:ok, %{body: body}} ->
+            {true, %{fields: fields}, _} =
+              body
+              |> Jason.decode!()
+              |> Map.get(kid)
+              |> JOSE.JWK.from_pem()
+              |> JOSE.JWT.verify_strict([alg], jwt)
+
+            {:ok, fields}
+
+          {:error, msg} ->
+            {:error, msg}
         end
     end
   end
 
+  # defp check_identity_v3(jwt, name) do
+  #   case Joken.peek_header(jwt) do
+  #     {:error, msg} ->
+  #       {:error, msg}
+
+  #     {:ok, %{"kid" => kid, "alg" => alg}} ->
+  #       case fetch(@g_certs3_url, name) do
+  #         {:ok, %{body: body}} ->
+  #           %{"keys" => certs} = Jason.decode!(body)
+  #           cert = Enum.find(certs, fn cert -> cert["kid"] == kid end)
+  #           signer = Joken.Signer.create(alg, cert)
+  #           Joken.verify(jwt, signer, [])
+
+  #         {:error, msg} ->
+  #           {:error, msg}
+  #       end
+  #   end
+  # end
+
   # decouple from HTTP client
-  defp fetch(url) do
+  defp fetch(url, name) do
     Finch.build(:get, url)
-    |> Finch.request(PhxSolid.Finch)
+    |> Finch.request(name)
   end
 
   # token in body is equal to received cookie

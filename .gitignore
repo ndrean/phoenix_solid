@@ -37,3 +37,6 @@ phx_solid-*.tar
 npm-debug.log
 /assets/node_modules/
 
+*.db
+*.db-*
+.credo*

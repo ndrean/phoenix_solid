@@ -4,19 +4,32 @@ defmodule PhxSolidWeb.OneTapController do
   require Logger
 
   def handle(conn, %{"credential" => jwt, "g_csrf_token" => g_csrf_token}) do
-    with {:ok, profile} <- ElixirGoogleCerts.verified_identity(conn, jwt, g_csrf_token) do
-      %{email: email, name: _name, google_id: _sub, picture: _pic} = profile
-      user_token = Phoenix.Token.sign(PhxSolidWeb.Endpoint, "user token", email)
+    with {:ok, profile} <-
+           ElixirGoogleCerts.verified_identity(conn, jwt, g_csrf_token, PhxSolid.Finch) do
+      %{email: email, name: name} = profile
+      token = PhxSolid.Token.user_generate(email)
 
-      conn
-      |> fetch_session()
-      # |> fetch_flash()
-      |> put_session(:user_token, user_token)
-      # |> put_session(:user_id, user.id)
-      |> put_session(:profile, profile)
-      |> put_session(:origin, "google_sdk")
-      |> redirect(to: ~p"/welcome")
-      |> halt()
+      case PhxSolid.User.create(%{email: email, name: name}) do
+        {:error, errors} ->
+          conn
+          |> fetch_session()
+          |> fetch_flash()
+          |> put_flash(:error, inspect(errors))
+          |> redirect(to: ~p"/")
+
+        {:ok, user} ->
+          {:ok, u} = PhxSolid.User.update_token(%{id: user.id, user_token: token})
+
+          conn
+          |> fetch_session()
+          |> put_session(:user_token, token)
+          |> put_session(:profile, profile)
+          |> put_session(:logs, u.logs)
+          |> put_session(:origin, "google_one_tap")
+          |> redirect(to: ~p"/welcome")
+      end
     end
   end
 end
+
+# PhxSolid.Repo.get_by!(PhxSolid.User, name: "Neven DREAN")

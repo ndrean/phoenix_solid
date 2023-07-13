@@ -16,6 +16,12 @@ config :phx_solid,
 config :phx_solid,
   ecto_repos: [PhxSolid.Repo]
 
+config :phx_solid, PhxSolid.Repo,
+  database: Path.expand("../phx_solid_dev.sq3", Path.dirname(__ENV__.file)),
+  key: "secret",
+  pool_size: 5,
+  show_sensitive_data_on_connection_error: true
+
 # Configures the endpoint
 config :phx_solid, PhxSolidWeb.Endpoint,
   url: [host: "localhost"],
@@ -24,7 +30,7 @@ config :phx_solid, PhxSolidWeb.Endpoint,
     layout: false
   ],
   pubsub_server: PhxSolid.PubSub,
-  live_view: [signing_salt: "JdlkQEhy"]
+  live_view: [signing_salt: "WDPkDNzDwUG1jPxEDcag+XYKvVPEEPoZ"]
 
 # Configures the mailer
 #
@@ -35,15 +41,22 @@ config :phx_solid, PhxSolidWeb.Endpoint,
 # at the `config/runtime.exs`.
 config :phx_solid, PhxSolid.Mailer, adapter: Swoosh.Adapters.Local
 
-# Configure esbuild (the version is required)
+# Configure esbuild (the version is required). Run `node build.js` in the folder "/assets".
 config :esbuild,
-  version: "0.17.11",
-  default: [
-    args:
-      ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
-    cd: Path.expand("../assets", __DIR__),
-    env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
-  ]
+  version: "0.17.11"
+
+#   default: [
+#     args: ~w(
+#         js/app.js
+#         --loader:.js=jsx
+#         --bundle --target=es2020
+#         --outdir=../priv/static/assets
+#         --external:/fonts/*
+#         --external:/images/*
+#         ),
+#     cd: Path.expand("../assets", __DIR__),
+#     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+#   ]
 
 # Configure tailwind (the version is required)
 config :tailwind,

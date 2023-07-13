@@ -1,4 +1,5 @@
 defmodule PhxSolidWeb.Router do
+  import Phoenix.LiveView.Router
   use PhxSolidWeb, :router
 
   # https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid#content_security_policy
@@ -13,7 +14,7 @@ defmodule PhxSolidWeb.Router do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
-    plug :put_root_layout, {PhxSolidWeb.Layouts, :root}
+    plug :put_root_layout, html: {PhxSolidWeb.Layouts, :root}
     plug :protect_from_forgery
 
     plug :put_secure_browser_headers
@@ -32,7 +33,8 @@ defmodule PhxSolidWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
-    get "/welcome", PageController, :welcome
+    live "/welcome", WelcomeLive
+    live "/spahook", SolidAppLive
     get "/spa", SPAController, :index
   end
 

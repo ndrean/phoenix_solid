@@ -5,10 +5,11 @@ import { lazy } from "solid-js";
 import { Router, Route, Routes, A } from "@solidjs/router";
 import BauSolidCss from "bau-solidcss";
 
+import { active, inactive, flexed } from "./indexCss";
+import { phoenixCl } from "./appCss";
 import phoenix from "./assets/phoenix.svg";
 import context from "./context";
-import styles from "./App.module.css";
-import "./index.css";
+// import styles from "./App.module.css";
 
 // --------- SOCKET _______
 const socket = new Socket("/socket", {
@@ -18,31 +19,24 @@ socket.connect();
 export { socket };
 // -->
 
-const { css, styled } = BauSolidCss();
+const { css, styled, createGlobalStyles } = BauSolidCss();
 
-const active = css`
-  color: midnightblue;
-  font-weight: bold;
-  padding: 0.3em;
-  border-radius: 5px;
-  border: 2px solid;
-  background-color: bisque;
-  margin-right: 10px;
-  text-decoration: none;
+createGlobalStyles`
+  body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
 `;
 
-const inactive = css`
-  color: dodgerblue;
-  border-radius: 5px;
-  border: 2px solid;
-  margin-right: 10px;
-  padding: 0.3em;
-  text-decoration: none;
-`;
-
-const flexed = css`
-  display: flex;
-`;
 const Nav = (props) => styled("nav", props)`
   background-color: #282c34;
   padding: 1em;
@@ -50,11 +44,12 @@ const Nav = (props) => styled("nav", props)`
 `;
 
 function app(ctx) {
-  history.pushState("", "", "/");
+  history.pushState("/", "", "/");
   const Home = lazy(() => import("./Home"));
   const Comp1 = lazy(() => import("./Comp1"));
   const Comp2 = lazy(() => import("./Comp2"));
 
+  console.log("return", import.meta.env.VITE_RETURN_URL);
   return (props) => (
     <div>
       <Nav>
@@ -67,8 +62,11 @@ function app(ctx) {
         <A activeClass={active} inactiveClass={inactive} end href="/c2">
           Comp2
         </A>
-        <a href="http://localhost:4000/welcome" class={inactive + " " + flexed}>
-          <img src={phoenix} class={styles.phoenix} alt="phoenix" />
+        <a
+          href={import.meta.env.VITE_RETURN_URL}
+          class={inactive + " " + flexed}
+        >
+          <img src={phoenix} class={phoenixCl} alt="phoenix" />
           <span>Phoenix</span>
         </a>
       </Nav>
@@ -81,13 +79,6 @@ function app(ctx) {
   );
 }
 
-const root = document.getElementById("root");
-
-if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
-  throw new Error(
-    "Root element not found. Did you forget to add it to your index.html? Or maybe the id attribute got misspelled?"
-  );
-}
-
+const spa = document.getElementById("spa");
 const App = app(context);
-render(() => <Router>{App()}</Router>, root);
+render(() => <Router>{App()}</Router>, spa);
