@@ -1,6 +1,5 @@
 // If you want to use Phoenix channels, run `mix help phx.gen.channel`
 import "./user_socket.js";
-import toggleNav from "./toggleNav.js";
 import onlineStatus from "./onlineStatus.js";
 // import { Facebook } from "./facebook";
 import { SolidAppHook } from "./solidAppHook.js";
@@ -44,5 +43,3 @@ if (fbutton) Facebook(fbutton);
 
 const online = document.getElementById("online");
 if (online) onlineStatus(online);
-
-toggleNav();

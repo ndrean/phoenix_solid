@@ -1,19 +1,14 @@
 defmodule PhxSolidWeb.SolidApp do
-  # use PhxSolidWeb, :live_component
   use Phoenix.Component
+  # use PhxSolidWeb, :live_component
 
-  # attr :process_info, :map
-  # @impl true
+  @moduledoc false
+
   def render(assigns) do
     ~H"""
     <div id="solid" phx-hook="SolidAppHook" phx-update="ignore"></div>
     """
   end
-
-  # @impl true
-  # def mount(socket) do
-  #   {:ok, socket}
-  # end
 
   # @impl true
   # def update(assigns, socket) do

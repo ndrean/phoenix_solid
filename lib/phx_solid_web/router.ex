@@ -34,6 +34,7 @@ defmodule PhxSolidWeb.Router do
 
     get "/", PageController, :home
     live "/welcome", WelcomeLive
+    live "/spahook", SolidAppLive
     get "/spa", SPAController, :index
   end
 

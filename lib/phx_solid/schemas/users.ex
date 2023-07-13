@@ -78,9 +78,15 @@ defmodule PhxSolid.User do
   def check(key1, val, key2) do
     user = Repo.get_by(User, %{key1 => val})
 
-    case Map.get(user, key2, nil) do
-      nil -> {:error, :not_found}
-      _ -> {:ok, user}
+    case user do
+      nil ->
+        {:error, :not_found}
+
+      user ->
+        case Map.get(user, key2, nil) do
+          nil -> {:error, :not_found}
+          _ -> {:ok, user}
+        end
     end
   end
 end
