@@ -40,3 +40,7 @@ npm-debug.log
 *.db
 *.db-*
 .credo*
+phx_solid_dev
+phx_solid_dev-*
+
+/priv/static/spa/

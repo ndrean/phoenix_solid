@@ -19,14 +19,14 @@ defmodule PhxSolidWeb.Nav do
           <.link
             class={@active.("#solid")}
             phx-click={@display.("#solid")}
-            patch={~p"/welcome?#{%{display: "#solid"}}"}
+            patch={~p"/welcome?display=solid"}
           >
             SPA Hook
           </.link>
           <.link
             class={@active.("#profile")}
             phx-click={@display.("#profile")}
-            patch={~p"/welcome?#{%{display: "#profile"}}"}
+            patch={~p"/welcome?display=profile"}
           >
             User profile
           </.link>

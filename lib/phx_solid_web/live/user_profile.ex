@@ -6,6 +6,7 @@ defmodule PhxSolidWeb.UserProfile do
 
   attr :profile, :map
   attr :logs, :integer
+  attr :origin, :string
 
   def render(assigns) do
     ~H"""
@@ -13,8 +14,11 @@ defmodule PhxSolidWeb.UserProfile do
       <h1>
         Welcome <%= @profile.name %>! <img width="32px" src={@profile.picture} />
       </h1>
-      <p>You are <strong>signed in</strong> with your <strong>Account</strong> <br />
-        <strong style="color:teal;"><%= @profile.email %></strong></p>
+      <p class="relative w-[max-content] font-mono before:absolute before:inset-0 before:animate-typewriter before:bg-white">
+        You <strong>signed in</strong>
+        with <%= @origin %> with your <strong>Account</strong>:
+        <strong style="color:teal;"><%= @profile.email %></strong>
+      </p>
       <hr />
       <br />
       <p>You connected <%= @logs %> times</p>

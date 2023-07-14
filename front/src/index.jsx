@@ -1,7 +1,7 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
 import { Socket } from "phoenix";
-import { lazy } from "solid-js";
+import { createEffect, lazy } from "solid-js";
 import { Router, Route, Routes, A } from "@solidjs/router";
 import BauSolidCss from "bau-solidcss";
 
@@ -9,8 +9,13 @@ import { active, inactive, flexed } from "./indexCss";
 import { phoenixCl } from "./appCss";
 import phoenix from "./assets/phoenix.svg";
 import context from "./context";
+import { onlineListener } from "./onlineListener";
+// import onlineUrl from "/images/online.png";
+// import offlineUrl from "/images/offline.png";
+// import { handleOnline, handleOffline, handleOnload } from "./onoffline";
 // import styles from "./App.module.css";
 
+let onlineStatus;
 // --------- SOCKET _______
 const socket = new Socket("/socket", {
   params: { token: window.userToken },
@@ -37,8 +42,20 @@ code {
 }
 `;
 
-const Nav = (props) => styled("nav", props)`
+const mainNav = css`
+  display: flex;
+  justify-content: space-between;
+  align-content: center;
+  align-items: stretch;
   background-color: #282c34;
+`;
+
+const img = css`
+  display: flex;
+  align-items: center;
+`;
+
+const Nav = (props) => styled("nav", props)`
   padding: 1em;
   display: flex;
 `;
@@ -50,26 +67,33 @@ function app(ctx) {
   const Comp2 = lazy(() => import("./Comp2"));
 
   console.log("return", import.meta.env.VITE_RETURN_URL);
+
   return (props) => (
     <div>
-      <Nav>
-        <A activeClass={active} inactiveClass={inactive} end href="/">
-          Home
-        </A>
-        <A activeClass={active} inactiveClass={inactive} end href="/c1">
-          Comp1
-        </A>
-        <A activeClass={active} inactiveClass={inactive} end href="/c2">
-          Comp2
-        </A>
-        <a
-          href={import.meta.env.VITE_RETURN_URL}
-          class={inactive + " " + flexed}
-        >
-          <img src={phoenix} class={phoenixCl} alt="phoenix" />
-          <span>Phoenix</span>
-        </a>
-      </Nav>
+      <div class={mainNav}>
+        <Nav>
+          <A activeClass={active} inactiveClass={inactive} end href="/">
+            Home
+          </A>
+          <A activeClass={active} inactiveClass={inactive} end href="/c1">
+            Comp1
+          </A>
+          <A activeClass={active} inactiveClass={inactive} end href="/c2">
+            Comp2
+          </A>
+          <a
+            href={import.meta.env.VITE_RETURN_URL}
+            class={inactive + " " + flexed}
+          >
+            <img src={phoenix} class={phoenixCl} alt="phoenix" />
+            <span>Phoenix</span>
+          </a>
+        </Nav>
+
+        <div class={img}>
+          <img ref={(el) => onlineListener(el)} alt="online-status" />
+        </div>
+      </div>
       <Routes>
         <Route path="/" component={Home} />
         <Route path="/c1" component={Comp1} />

@@ -397,3 +397,7 @@ Repo.insert!(
   ]
 )
 ```
+
+## CSS
+
+Typewritter effect: <https://dev.to/lazysock/make-a-typewriter-effect-with-tailwindcss-in-5-minutes-dc>

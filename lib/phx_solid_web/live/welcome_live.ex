@@ -12,13 +12,14 @@ defmodule PhxSolidWeb.WelcomeLive do
     ~H"""
     <Nav.render active={@active} display={@display} />
     <SolidApp.render />
-    <UserProfile.render profile={@profile} logs={@logs} />
+    <UserProfile.render profile={@profile} logs={@logs} origin={@origin} />
     """
   end
 
   @impl true
   def mount(_params, session, socket) do
-    %{"user_token" => user_token, "profile" => profile, "logs" => logs} = session
+    %{"user_token" => user_token, "profile" => profile, "logs" => logs, "origin" => origin} =
+      session
 
     if connected?(socket) do
       Logger.info("LV Connected ******}")
@@ -29,6 +30,7 @@ defmodule PhxSolidWeb.WelcomeLive do
      assign(socket,
        user_token: user_token,
        profile: profile,
+       origin: origin,
        logs: logs
      )}
   end
@@ -55,7 +57,7 @@ defmodule PhxSolidWeb.WelcomeLive do
     view =
       case map_size(qstring) do
         0 -> "#profile"
-        _ -> Map.get(qstring, "display")
+        _ -> "#" <> Map.get(qstring, "display")
       end
 
     active = fn current -> [base, current === view && styled] end

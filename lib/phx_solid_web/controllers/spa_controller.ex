@@ -33,7 +33,10 @@ defmodule PhxSolidWeb.SPAController do
             read_line(l, file, token)
           end)
           |> then(fn file ->
-            Phoenix.Controller.html(conn, file)
+            conn
+            |> put_resp_content_type("text/html")
+            |> send_resp(200, file)
+            |> halt()
           end)
         rescue
           e ->
