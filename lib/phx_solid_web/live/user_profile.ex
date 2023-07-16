@@ -11,12 +11,12 @@ defmodule PhxSolidWeb.UserProfile do
   def render(assigns) do
     ~H"""
     <div id="profile">
-      <h1>
+      <h1 class="relative w-[max-content] font-mono before:absolute before:inset-0 before:animate-typewriter before:bg-white">
         Welcome <%= @profile.name %>! <img width="32px" src={@profile.picture} />
       </h1>
-      <p class="relative w-[max-content] font-mono before:absolute before:inset-0 before:animate-typewriter before:bg-white">
+      <p>
         You <strong>signed in</strong>
-        with <%= @origin %> with your <strong>Account</strong>:
+        with <%= @origin %> with youraccount:
         <strong style="color:teal;"><%= @profile.email %></strong>
       </p>
       <hr />

@@ -2,8 +2,8 @@ defmodule PhxSolidWeb.CounterChannel do
   use PhxSolidWeb, :channel
 
   @impl true
-  def join("counter", payload, socket) do
-    IO.inspect(payload)
+  def join("counter", _payload, socket) do
+    # IO.inspect(payload)
     {:ok, socket}
   end
 

@@ -43,4 +43,5 @@ npm-debug.log
 phx_solid_dev
 phx_solid_dev-*
 
-/priv/static/spa/
+/priv/static/spa/*
+.env-*

@@ -5,7 +5,7 @@ import { headerCl, solidCl, appCl } from "./app_css.js";
 // import styles from "./App.module.css";
 // class={styles.header}
 
-import useChannel from "../useChannel";
+import useChannel from "../useChannel.js";
 import { socket } from "../user_socket.js";
 
 export default function Home() {

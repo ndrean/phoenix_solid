@@ -1,0 +1,4 @@
+FROM nginx:latest
+COPY ./priv/static/assets/ /usr/share/nginx/html/assets/
+COPY ./priv/static/spa/ /usr/share/nginx/html/spa/
+# COPY solid.conf /etc/nginx/conf.d/

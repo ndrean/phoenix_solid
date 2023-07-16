@@ -11,13 +11,13 @@ config :phx_solid,
   google_client_id: System.get_env("GOOGLE_CLIENT_ID"),
   google_client_secret: System.get_env("GOOGLE_CLIENT_SECRET"),
   google_scope: "profile email",
-  spa_dir: "./priv/static/spa/"
+  spa_dir: System.fetch_env!("SPA_DIR")
 
 config :phx_solid,
   ecto_repos: [PhxSolid.Repo]
 
 config :phx_solid, PhxSolid.Repo,
-  database: Path.expand("../phx_solid_dev.sq3", Path.dirname(__ENV__.file)),
+  database: System.get_env("DATABASE_PATH") || Path.expand("../db/phx_solid.db", Path.dirname(__ENV__.file)),
   key: "secret",
   pool_size: 5,
   show_sensitive_data_on_connection_error: true
@@ -39,7 +39,7 @@ config :phx_solid, PhxSolidWeb.Endpoint,
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :phx_solid, PhxSolid.Mailer, adapter: Swoosh.Adapters.Local
+# config :phx_solid, PhxSolid.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configure esbuild (the version is required). Run `node build.js` in the folder "/assets".
 config :esbuild,

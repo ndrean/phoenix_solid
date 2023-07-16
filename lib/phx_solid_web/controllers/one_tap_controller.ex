@@ -4,9 +4,8 @@ defmodule PhxSolidWeb.OneTapController do
   require Logger
 
   def handle(conn, %{"credential" => jwt, "g_csrf_token" => g_csrf_token}) do
-    with {:ok, profile} <-
+    with {:ok, %{email: email, name: name} = profile} <-
            ElixirGoogleCerts.verified_identity(conn, jwt, g_csrf_token, PhxSolid.Finch) do
-      %{email: email, name: name} = profile
       token = PhxSolid.Token.user_generate(email)
 
       case PhxSolid.User.create(%{email: email, name: name}) do

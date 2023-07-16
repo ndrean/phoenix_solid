@@ -12,13 +12,13 @@ dependencies:
     specifier: ^0.1.15
     version: 0.1.15
   phoenix:
-    specifier: file:../deps/phoenix
+    specifier: link:../deps/phoenix
     version: file:../deps/phoenix
   phoenix_html:
-    specifier: file:../deps/phoenix_html
+    specifier: link:../deps/phoenix_html
     version: file:../deps/phoenix_html
   phoenix_live_view:
-    specifier: file:../deps/phoenix_live_view
+    specifier: link:../deps/phoenix_live_view
     version: file:../deps/phoenix_live_view
   solid-js:
     specifier: ^1.7.7

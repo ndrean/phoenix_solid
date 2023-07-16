@@ -22,8 +22,7 @@ defmodule PhxSolidWeb.WelcomeLive do
       session
 
     if connected?(socket) do
-      Logger.info("LV Connected ******}")
-      # :ok = PhxSolidWeb.Endpoint.subscribe("check_user")
+      Logger.info("LV Connected")
     end
 
     {:ok,
@@ -35,18 +34,6 @@ defmodule PhxSolidWeb.WelcomeLive do
      )}
   end
 
-  # authorization check callback for the channel "info"
-  # def handle_info(%{topic: "check_user", event: "check_token", payload: response}, socket) do
-  #   if response["user_token"] === socket.assigns.user_token do
-  #     PhxSolidWeb.Endpoint.broadcast!("user_checked", "authorized", %{verified: :ok})
-  #   else
-  #     PhxSolidWeb.Endpoint.broadcast!("user_checked", "authorized", %{
-  #       verified: :unauthorized
-  #     })
-  #   end
-
-  #   {:noreply, socket}
-  # end
 
   # the event of changing the url is captured with handle_params
   @impl true

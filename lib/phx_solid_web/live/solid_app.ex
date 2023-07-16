@@ -1,6 +1,5 @@
 defmodule PhxSolidWeb.SolidApp do
   use Phoenix.Component
-  # use PhxSolidWeb, :live_component
 
   @moduledoc false
 

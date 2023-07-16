@@ -1,30 +1,24 @@
 # PhxSolid
 
-We present a Phoenix app that starts are a normal SSR app and:
+We present a Phoenix app that starts as a normal Phoenix SSR app. It will render two versions of an JS SPA: one an embeddedwithin a hook, and the other rendered in a separate page.
 
-- renders an SPA,
-- inserts an SPA in a Liveview.
+The SPA will commmunicate with the Phoenix node through an authenticated websocket. Channels will be set up to maintain the state of the SPA as well as push information from the backend to the SPA.
 
-Once authenticated with a sign-in, the user can access to the SPA, powered by SolidJS.
+The SPA uses [SolidJS](https://www.solidjs.com/).
 
-This SPA will communicate with this node via sockets, more precisely over a channel. The node will save the state of the SPA.
+What is the difference between the two options? The built version of the SPA has code splitting with 9 files produced, the main chunk is 50k, and a total of 55kb unzipped (compiled with `vite build` using `Rollup`)). The embedded version ships "app.js" and the "spa.js" with respective size of 130kb and 55kb (compiled with Esbuild via `node build.js --deploy`)
 
 ## Boilerplates
 
-- Phoenix
+### Phoenix
 
 ```bash
 mix phx.new phx_solid
 ```
 
-- SolidJS: non hook
+### SolidJS: **"hooked"**
 
-```bash
-cd phx_solid
-npx degit solidjs/templates/js front
-```
-
-- SolidJS: "hooked"
+#### Esbuild
 
 In this case, you need to modify the `Esbuild` configuration given in Phoenix. Since SolidJS uses JSX for templating, we have to be sure Esbuild compiles for **SolidJS** files and not for _React_. It is explained in the Phoenix doc how to add a plugin.
 
@@ -32,10 +26,32 @@ In this case, you need to modify the `Esbuild` configuration given in Phoenix. S
 
 We followed the doc, build the file `/assets/build.js`, run it (`node build.js`) and modified the "dev.config".
 
-For the hook version, the following dependencies are installed:
+The "config.exs" file will only contain the version:
+
+```elixir
+# config.exs
+config :esbuild,
+  version: "0.17.11"
+```
+
+Instead of doing `mix assets.deploy`, you do (in the "assets" folder) `node build.js --deploy`.
+
+#### Mount an SPA as a hook to a Liveview
+
+We will mount a LiveView and render a component. This component has a "hook" attached, declared via a dataset `phx-hook=solidAppHook` in the HTML. This hook references the SPA JS code.
+
+```elixir
+use Phoenix.Component
+def display(assigns) do
+  ~H"""
+  <div id="solid" phx-hook="SolidAppHook" phx-update="ignore"></div>
+  """
+end
+```
+
+Firstly navigate to the "assets" folder and install the dependencies:
 
 ```json
-//  package.json
 "dependencies": {
    "@solidjs/router": "^0.8.2",
    "bau-solidcss": "^0.1.14",
@@ -50,29 +66,13 @@ For the hook version, the following dependencies are installed:
  }
 ```
 
-## Config
-
-We use Google One Tap as a third-arty service for quick and secure authentication, thus need to set up credentials.
-
-```elixir
-# config.exs
-config :phx_solid,
-  google_client_id: System.get_env("GOOGLE_CLIENT_ID"),
-  google_client_secret: System.get_env("GOOGLE_CLIENT_SECRET"),
-  google_scope: "profile email",
-  spa_dir: "./priv/static/spa/"
-
-config :esbuild,
-  version: "0.17.11"
-```
-
-## Mount an SPA as a hook to a Liveview
-
 ```bash
 cd assets
 pnpm init
 pnpm install
 ```
+
+We will attach an object "hook" to the `LiveSocket` (the one authneticated with the `_csrf_token`). This "hook" will contain the code of the SPA.
 
 ```js
 //app.js
@@ -84,6 +84,8 @@ let liveSocket = new LiveSocket("/live", Socket, {
 });
 ```
 
+The code of the hook will run the main function of the SPA.
+
 ```js
 //SolidAppHook.js
 const SolidAppHook = {
@@ -91,20 +93,7 @@ const SolidAppHook = {
 }
 ```
 
-We mount a Liveview, and render a **stateless** liveview component. It will hold a dataset `phx-hook` whose value is the name of the hook, 'SolidAppHook'.
-
-It is stateless since the communication between the Javascript and Elixir will happen through the websocket via a `channel` pubsub and the state will be maintained in the liveview.
-We set up a topic for each piece of state of the SPA we want to maintain. The liveview will subscribe to these topics, and so withe channel will instantiate the SPA state. Therefor, the liveview socket will maintain the state, pubsub to the channel, which in turn will send messages to the SPA who has listeners on the other side of the websocket. We mutate the SPA state when we receive messages, so by reactivity, this will update the UI.
-
-```elixir
-
-use Phoenix.Component
-def display(assigns) do
-  ~H"""
-  <div id="solid" phx-hook="SolidAppHook" phx-update="ignore"></div>
-  """
-end
-```
+The component will be stateless, but it can be statefull as well. The communication between the Javascript and Elixir will happen through the websocket. To this websocket, we will attach a `channel`, a Genserver with a pubsub. With this in place, we will be able to have two ways communication. The state will be maintained in the Liveview.
 
 > The SPA offers a navigation, in particular a link to return to Phoenix. We need to pass this via env variables. This is done with `Vite` with `import.meta.env.VITE_XXX`. Vite already has `dotenv` installed. All this is [explained by the doc](https://vitejs.dev/guide/env-and-mode.html#env-files). You can use just like this to reference the URL to which we want to navigate back.
 
@@ -117,38 +106,39 @@ end
 VITE_RETURN_URL=http://localhost:4000/welcome
 ```
 
+#### Mix assets.deploy
+
+Since we run the function "build.js", we need to modify the command in the "aliases" function as:
+
+```elixir
+defp aliaises do
+[
+  "assets.deploy": [
+    "tailwind default --minify",
+    "cmd --cd assets node build.js --deploy",
+    "phx.digest"
+  ]
+]
+```
+
+Remember, `mix phx.digset.clean --all`
+
 ## Navigation with Phoenix/Liveview
 
-The landing page is a "traditional" SSR page. It offers an authentication process. Once you are authenticated via the sign-in, you are redirected to a Liveview. There is a navbar above to navigate between 3 pages: the "hooked" version of the SPA, the "build" version of the SPA and the users' profile. The profile and hook pages are `live components`; the liveview renders one or the other. This is done by passing a boolean value in the query string.
+Once you are authenticated via the sign-in, you are redirected to a Liveview. We set up a [tab like navigation](https://dev.to/ndrean/breadcumbs-with-phoenix-liveview-2d40) where you can choose to render the SPA in a full page or run the embedded SPA.
 
-Also note than an `on mount` function is run on each mount of the liveview as [recommended by the doc](https://hexdocs.pm/phoenix_live_view/security-model.html#mounting-considerations).
+The full page SPA will be the "built" version and be rendered by `Plug.Conn.send_resp`.
 
-## A word about the "context" pattern in the SPA
+An `on mount` function is run on each mount of the liveview as [recommended by the doc](https://hexdocs.pm/phoenix_live_view/security-model.html#mounting-considerations).
 
-A functional component is a function that takes some props and renders a function that renders some HTML. Any change in the state should, via the props, run this function and update the DOM.
+### SolidJS: **non hook**
 
-```jsx
-const Component = (props)=> {()=> HTML stuff(props)}
-<Component ...>{props.children}</Component>
+```bash
+cd phx_solid
+npx degit solidjs/templates/js front
 ```
 
-The "context" pattern is a parametrisation of this functional component. We use it like this:
-
-```jsx
-const component = (context) => (props)=> {()=> HTML stuff(contxt, props)}
-const Component = component(context)
-
-<Component ...>{props.children} </Component>
-```
-
-We can put in the "context" object anything we want to share. It can be a global state, CSS themes...
-The component will not be reactive to the context: it will however read it whenever it renders.
-
-This is useful when you navigate in an SPA. Whenever you visit a new page with components, these components' functions will run, thus read the context. If we change a state in a page and pass it to the context, and if another component in this new page uses this state, it will render update-to-date data.
-
-This simple pattern saves from having to use complicated global state managers. However, if you have several intricated components on the same page, then the context pattern is useless and you still need a global state for this page to render the components.
-
-### Static files config for the "built" version
+### Set up
 
 - `Vite`: use `base: "/spa"` to pass the correct path in the build.
 
@@ -156,6 +146,7 @@ This simple pattern saves from having to use complicated global state managers. 
 export default defineConfig({
   plugins: [solidPlugin()],
   base: "/spa/",
+         ^^^
   build: {
     target: "esnext",
   },
@@ -180,70 +171,31 @@ plug Plug.Static,
   only: PhxSolidWeb.static_paths()
 ```
 
-### Build and copy the SPA into "priv/static"
+### Build the rendered SPA
 
-We will compile the JS/CSS and copy the files into the folder `Application.compile_env!(:phx_solid, :spa_dir)`.
+We will compile the JS/CSS and copy the files into the folder "priv/static/spa":
 
-We set up a "mix task" to compile and copy. It uses the behaviour "Mix.Task" and provides a `call/1` function to run these tasks.
+```elixir
+# config.exs
+Application.compile_env!(:phx_solid, :spa_dir)
+# .env
+ = System.fetch_env!("SPA_DIR")
+ = "./priv/static/spa`
+```
+
+We set up a [mix task](https://hexdocs.pm/mix/Mix.html) to compile and copy. It uses the behaviour "Mix.Task" and provides a `call/1` function to run these tasks.
 
 ```bash
 mix spa
 ```
 
-## Add Google One Tap
+### SPA rendering
 
-To enable **Google One tap**, you need the module `:google_certs` and add dependencies:
+The compiled files are located in the "priv/state/spa" (declared in our "config.exs").
 
-```elixir
-{:jason, "~> 1.4"},{:joken, "~> 2.5"}
-```
+We set up an endpoint "/spa" to render the SPA. The corresponding controller will read the compiled "index.html" + associated JS + CSS files. It will also inject into the file a `user_token` from the session, and attached it to the `window` object via a script: the browser will read it. We render these files with `Phoenix.Controller.html(conn, file)`.
 
-You will credentials from Google.
-
-- create a project in the <https://console.cloud.google.com>
-- then create credentials as a **web application**
-- ⚠️ the "Authorized Javascript origins" should contain **2** fields, with AND without the port.
-
-You set up a "one_tap_controller". It is a POST endpoint and will receive a response from Google. It will set a `user_token` and the users' `profile` in the session, and redirect to a "welcome" page.
-
-<img width="502" alt="Screenshot 2023-07-07 at 16 51 37" src="https://github.com/ndrean/phoenix_solid/assets/6793008/b07428c8-1722-49f9-9003-6f9b513eb1e4">
-
-### Source .env
-
-With
-
-```bash
-# .env
-export GOOGLE_CLIENT_ID=xxx
-export GOOGLE_CLIENT_SECRET=xxx
-```
-
-do:
-
-```bash
-source .env
-```
-
-### Content Secuity Policy
-
-In the `router` module, you will set the CSP as per [Google's recommendations](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid#content_security_policy)
-
-```elixir
-plug(
-  :put_secure_browser_headers,
-  %{"content-security-policy-report-only" => @csp}
-)
-```
-
-```elixir
-@csp "
-script-src https://accounts.google.com/gsi/client;
-frame-src https://accounts.google.com/gsi/;
-connect-src https://accounts.google.com/gsi/;
-"
-```
-
-You will also need to secure the scripts used to pass the token to the `window` object. This can be done with a `nonce`.
+Each time we will navigate to the build version, Phoenix will inject the current `user_token`. This will garantee the validity of the websocket connection since we will check the token with the alter eog function `Phoenix.Token.verify`
 
 ## Generate a token per user
 
@@ -256,14 +208,6 @@ Phoenix.Token.sign(PhxSolidWeb.Endpoint,"user_token", email )
 ## Passing data between Plug (HTTP) and Liveview
 
 We insert this token (or user.id) into the `session` with `Plug.Conn.put_session(conn, key, value)`. Any plug has access to the session, as well as Liveview in the `mount/3`.
-
-## SPA rendering
-
-The compiled files are located in the "priv/state/spa" (declared in our "config.exs").
-
-We set up an endpoint "/spa" to render the SPA. The corresponding controller will read the compiled "index.html" + associated JS + CSS files. It will also inject into the file a `user_token` from the session, and attached it to the `window` object via a script: the browser will read it. We render these files with `Phoenix.Controller.html(conn, file)`.
-
-Each time we will navigate to the build version, Phoenix will inject the current `user_token`. This will garantee the validity of the websocket connection since we will check the token with the alter eog function `Phoenix.Token.verify`
 
 ## Passing data from Phoenix to the SPA
 
@@ -348,27 +292,126 @@ mix phx.gen.channel Counter
 
 We could set up a Genserver, an Agent, an ETS table, a Redis session or use the database. If the app is distributed, most probably Redis or the database should be used.
 
-## Serving static files
+## Misc
+
+### Add Google One Tap
+
+To enable **Google One tap**, there is a module `:google_certs`. It needs the dependencies
+
+```elixir
+{:jason, "~> 1.4"},{:joken, "~> 2.5"}
+```
+
+`Joken` will bring in `JOSE` which I used to decrrypt the PEM version.
+
+#### Google credentials
+
+You will need credentials from Google.
+
+- create a project in the <https://console.cloud.google.com>
+- then create credentials as a **web application**
+- ⚠️ the "Authorized Javascript origins" should contain **2** fields, with AND without the port.
+
+You set up a "one_tap_controller". It is a POST endpoint and will receive a response from Google. It will set a `user_token` and the users' `profile` in the session, and redirect to a "welcome" page.
+
+<img width="502" alt="Screenshot 2023-07-07 at 16 51 37" src="https://github.com/ndrean/phoenix_solid/assets/6793008/b07428c8-1722-49f9-9003-6f9b513eb1e4">
+
+#### Source .env
+
+Don't forget to add the crendetials in ".env".
+
+```bash
+# .env-dev
+export GOOGLE_CLIENT_ID=xxx
+export GOOGLE_CLIENT_SECRET=xxx
+```
+
+and source them:
+
+```bash
+source .env-dev
+```
+
+### Content Secuity Policy
+
+In the `router` module, you will set the CSP as per [Google's recommendations](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid#content_security_policy)
+
+```elixir
+plug(
+  :put_secure_browser_headers,
+  %{"content-security-policy-report-only" => @csp}
+)
+```
+
+```elixir
+@csp "
+script-src https://accounts.google.com/gsi/client;
+frame-src https://accounts.google.com/gsi/;
+connect-src https://accounts.google.com/gsi/;
+"
+```
+
+You will also need to secure the scripts used to pass the token to the `window` object. This can be done with a `nonce`.
+
+### Serving static files
 
 We could further reduce the load on the Phoenix backend by using a reverse proxy (Nginx > Caddy) with cache control. It would serve the static files and pass the WS connections and HTTP connections to the backend. Target is "localhost:80" ot point to the Cowboy web-server at "localhost:4000".
 
-See `nginx` conf. Run below to reload, test and set the local "config.conf" file.
+#### Nginx
+
+Relative paths in Nginx are resolved based on the Nginx installation directory, not the current working directory or the location of the configuration file.
+
+Run an Nginx image in detached mode (background mode). Name the container "web". We run the command "nginx":
 
 ```bash
-brew services start nginx
+docker run -it --rm -d -p 8080:80 --name web  nginx
+# stop it
+docker stop web
+
+```
+
+Enter in it and check:
+
+```bash
+docker run -it --rm -d -p 8080:80 --name web  nginx
+ls /usr/share/nginx/
+```
+
+Create a folder "rp" and insert an "index.html" file. Then bind it into the container:
+
+```bash
+docker run -it --rm -d -p 8080:80 --name web -v ./rp:/usr/share/nginx/html nginx
+```
+
+It should work. Automate this with a Dockerfile (located in the folder /docker/nginx). The image will use the underlying `entrypoint` and `cmd` provided by the NGINX image.
+
+```bash
+docker build -t webserver -f ./docker/nginx/Dockerfile .
+# check
+docker images
+# run a container from the image
+docker run -it --rm -p 80:80 --name web -v $(pwd)/solid.conf:/etc/nginx/conf.d/default.conf webserver
+# check
+docker ps
+
+```
+
+Check `nginx` local config:
+
+```bash
 nginx -c $(pwd)/config.conf -t
-# or
-nginx -s reload -c $(pwd)/config.conf -t
+#check listening port
+lsof -i :80
+
 ```
 
 ```bash
-lsof -i :80
-sudo lsof -i :80 | grep nginx | awk '{print $2}' | xargs kill -9
+
 ```
 
 and recompile the SPA so that
 
-## SQLITE
+### SQLITE
 
 - migration in a release without Mix installed: "release.ex"
 
@@ -398,6 +441,16 @@ Repo.insert!(
 )
 ```
 
-## CSS
+### CSS Typewritter
 
 Typewritter effect: <https://dev.to/lazysock/make-a-typewriter-effect-with-tailwindcss-in-5-minutes-dc>
+
+Configuration in Tailwind.config
+
+### TypedEctoSchema
+
+<https://hexdocs.pm/typed_ecto_schema/TypedEctoSchema.html?ref=blixt-dev>
+
+### Kaffy
+
+To be checked: <https://github.com/aesmail/kaffy?ref=blixt-dev>

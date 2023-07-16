@@ -11,7 +11,7 @@ defmodule PhxSolidWeb.UserLiveAuth do
   end
 
   def on_mount(:default, _p, %{"user_token" => user_token} = _session, socket) do
-    Logger.info("on mount_____________")
+    Logger.info("on mount check")
 
     case PhxSolid.User.check(:user_token, user_token, :id) do
       {:ok, _user} ->

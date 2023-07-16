@@ -34,7 +34,6 @@ defmodule PhxSolidWeb.Router do
 
     get "/", PageController, :home
     live "/welcome", WelcomeLive
-    live "/spahook", SolidAppLive
     get "/spa", SPAController, :index
   end
 
@@ -56,7 +55,7 @@ defmodule PhxSolidWeb.Router do
       pipe_through :browser
 
       live_dashboard "/dashboard", metrics: PhxSolidWeb.Telemetry
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
+      # forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end
 end

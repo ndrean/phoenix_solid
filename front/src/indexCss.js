@@ -1,6 +1,6 @@
 import BauSolidCss from "bau-solidcss";
 
-const { css } = BauSolidCss();
+const { css, styled } = BauSolidCss();
 
 const active = css`
   color: midnightblue;
@@ -26,4 +26,22 @@ const flexed = css`
   display: flex;
 `;
 
-export { active, inactive, flexed };
+const mainNav = css`
+  display: flex;
+  justify-content: space-between;
+  align-content: center;
+  align-items: stretch;
+  background-color: #282c34;
+`;
+
+const img = css`
+  display: flex;
+  align-items: center;
+`;
+
+const Nav = (props) => styled("nav", props)`
+  padding: 1em;
+  display: flex;
+`;
+
+export { active, inactive, flexed, mainNav, img, Nav };

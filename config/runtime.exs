@@ -27,7 +27,7 @@ if config_env() == :prod do
   # For example: ecto://USER:PASS@HOST/DATABASE
   # """
   database_path =
-    System.get_env("DATABASE_URL") ||
+    System.get_env("DATABASE_PATH") ||
       raise """
       env var DATABASE_PATH is missing
       """

@@ -1,21 +1,16 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
 import { Socket } from "phoenix";
-import { createEffect, lazy } from "solid-js";
+import { lazy } from "solid-js";
 import { Router, Route, Routes, A } from "@solidjs/router";
 import BauSolidCss from "bau-solidcss";
 
-import { active, inactive, flexed } from "./indexCss";
+import { active, inactive, flexed, mainNav, img, Nav } from "./indexCss";
 import { phoenixCl } from "./appCss";
 import phoenix from "./assets/phoenix.svg";
 import context from "./context";
 import { onlineListener } from "./onlineListener";
-// import onlineUrl from "/images/online.png";
-// import offlineUrl from "/images/offline.png";
-// import { handleOnline, handleOffline, handleOnload } from "./onoffline";
-// import styles from "./App.module.css";
 
-let onlineStatus;
 // --------- SOCKET _______
 const socket = new Socket("/socket", {
   params: { token: window.userToken },
@@ -24,7 +19,7 @@ socket.connect();
 export { socket };
 // -->
 
-const { css, styled, createGlobalStyles } = BauSolidCss();
+const { createGlobalStyles } = BauSolidCss();
 
 createGlobalStyles`
   body {
@@ -42,6 +37,7 @@ code {
 }
 `;
 
+/*
 const mainNav = css`
   display: flex;
   justify-content: space-between;
@@ -60,6 +56,7 @@ const Nav = (props) => styled("nav", props)`
   display: flex;
 `;
 
+*/
 function app(ctx) {
   history.pushState("/", "", "/");
   const Home = lazy(() => import("./Home"));
@@ -91,6 +88,7 @@ function app(ctx) {
         </Nav>
 
         <div class={img}>
+          {/* https://www.solidjs.com/docs/latest#ref */}
           <img ref={(el) => onlineListener(el)} alt="online-status" />
         </div>
       </div>

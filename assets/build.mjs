@@ -1,18 +1,17 @@
-const esbuild = require("esbuild");
-const { solidPlugin } = require("esbuild-plugin-solid");
+import { context, build } from "esbuild";
+import { solidPlugin } from "esbuild-plugin-solid";
 
 const args = process.argv.slice(2);
 const watch = args.includes("--watch");
 const deploy = args.includes("--deploy");
 
-const loader = { ".js": "jsx", ".svg": "file" };
-// Add loaders for images/fonts/etc, e.g. { '.svg': 'file' }
+const loader = { ".mjs": "jsx", ".svg": "file" };
 
 const plugins = [solidPlugin()];
 
 // Define esbuild options
 let opts = {
-  entryPoints: ["js/app.js"],
+  entryPoints: ["js/app.js", "js/solidAppHook.js"],
   bundle: true,
   logLevel: "info",
   target: "es2021",
@@ -34,8 +33,8 @@ if (watch) {
     ...opts,
     sourcemap: "inline",
   };
-  esbuild
-    .context(opts)
+
+  context(opts)
     .then((ctx) => {
       ctx.watch();
     })
@@ -43,5 +42,5 @@ if (watch) {
       process.exit(1);
     });
 } else {
-  esbuild.build(opts);
+  build(opts);
 }
