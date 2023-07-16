@@ -1,10 +1,8 @@
 # PhxSolid
 
-We present a Phoenix app that starts as a normal Phoenix SSR app with a login. It will render two versions of an JS SPA: one an embedded with a "hook" in a Liveview, and the other rendered in a separate page.
+The project is to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix app. It starts as a normal Phoenix SSR app with a login. It will render two versions of an SPA: one embedded with a "hook" in a Liveview, and the other rendered in a separate page.
 
 The SPA will commmunicate with the Phoenix node through an authenticated websocket. Channels will be set up to maintain the state of the SPA as well as push information from the backend to the SPA.
-
-The SPA uses [SolidJS](https://www.solidjs.com/).
 
 What are the difference between the two options?
 
@@ -312,6 +310,31 @@ To set up a channel, use the generator:
 
 ```bash
 mix phx.gen.channel Counter
+```
+
+The Javascript snippet to create a channel:
+
+```js
+import { onCleanup } from "solid-js";
+
+export default function useChannel(socket, topic) {
+  if (!socket) return null;
+  const channel = socket.channel(topic, { user_token: window.userToken });
+  channel
+    .join()
+    .receive("ok", () => {
+      console.log("Joined successfully");
+    })
+    .receive("error", (resp) => {
+      console.log("Unable to join", resp);
+    });
+  onCleanup(() => {
+    console.log("closing channel");
+    channel.leave();
+  });
+
+  return channel;
+}
 ```
 
 ## State persistence
