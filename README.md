@@ -155,6 +155,14 @@ const SolidAppHook = {
 
 You set up a "user_socket" and authenticate it in the backend with the "user token". We will attach a `channel`to have two ways communication between the front and the back.
 
+## Navigation with Phoenix/Liveview
+
+Once you are authenticated via the sign-in, you are redirected to a Liveview. We set up a [tab like navigation](https://dev.to/ndrean/breadcumbs-with-phoenix-liveview-2d40) where you can choose to render the SPA in a full page or run the embedded SPA.
+
+The full page SPA will be the "built" version and be rendered by `Plug.Conn.send_resp`.
+
+An `on mount` function is run on each mount of the liveview as [recommended by the doc](https://hexdocs.pm/phoenix_live_view/security-model.html#mounting-considerations).
+
 > The SPA offers a navigation, in particular a link to return to Phoenix. We need to pass this via env variables. This is done with `Vite` with `import.meta.env.VITE_XXX`. Vite already has `dotenv` installed. All this is [explained by the doc](https://vitejs.dev/guide/env-and-mode.html#env-files). You can use just like this to reference the URL to which we want to navigate back.
 
 ```js
@@ -165,14 +173,6 @@ You set up a "user_socket" and authenticate it in the backend with the "user tok
 # .env
 VITE_RETURN_URL=http://localhost:4000/welcome
 ```
-
-## Navigation with Phoenix/Liveview
-
-Once you are authenticated via the sign-in, you are redirected to a Liveview. We set up a [tab like navigation](https://dev.to/ndrean/breadcumbs-with-phoenix-liveview-2d40) where you can choose to render the SPA in a full page or run the embedded SPA.
-
-The full page SPA will be the "built" version and be rendered by `Plug.Conn.send_resp`.
-
-An `on mount` function is run on each mount of the liveview as [recommended by the doc](https://hexdocs.pm/phoenix_live_view/security-model.html#mounting-considerations).
 
 ## **non hook** SPA
 
