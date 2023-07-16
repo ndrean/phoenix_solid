@@ -4,13 +4,13 @@ The project is to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix
 
 The SPA will commmunicate with the Phoenix node through an authenticated websocket. Channels will be set up to maintain the state of the SPA as well as push information from the backend to the SPA.
 
-What are the difference between the two options?
+What are the differences between the two options?
 
-- the full page is built with `Vite` (with Esbuild and Rollup). The compilation of the fullpage code is a custom process. The embedded version is compiled with `Esbuild` only via a modified `mix assets.deploy`: you need to use a custom "build" version of Esbuild. Rollup is _more performant_ than Esbuild to minimize the size of the bundles.
+- the full page is built with `Vite` (with Esbuild and Rollup). The compilation of the fullpage code is a custom process, run via a `Task`. The embedded version is compiled with `Esbuild` via a modified `mix assets.deploy`: you set up a custom "build" version of Esbuild. Rollup is _more performant_ than Esbuild to minimize the size of the bundles.
 - to use authenticated websockets, we [adapt the documentation](https://hexdocs.pm/phoenix/channels.html#using-token-authentication). Once the user is authenticated, we generate a `Phoenix.Token`.
-  - when we use the embedded SPA, we pass this "user token" into the `conn.assigns` from a Phoenix controller and it will be available in the HTML "root.html.heex" template. It is hard coded, atatched to the `window` object and Javascript will be able to read it. For the backend Liveview, we pass it into a session so available in the `Phoenix.LiveView.mount/3` callback. The embedded version will be declared via a dataset `phx-hook` and rendered in a dedicated component.
-  - For the fullpage version, a controller will `Plug.Conn.send_resp` an "index.html" file. We hard code the token (available in the "conn.assigns") into this file. Then Javascript will be able to read it and use it.
-- both version will use the `_csrf_token` for the main `Socket` websocket, renewed each time we mount a new Liveview.
+  - when we use the embedded SPA, we pass this "user token" into the `conn.assigns` from a Phoenix controller and it will be available in the HTML "root.html.heex" template. It is hard coded, attached to the `window` object so Javascript is able to read it. For the backend Liveview, we pass it into a session so available in the `Phoenix.LiveView.mount/3` callback. The embedded version will be declared via a dataset `phx-hook` and rendered in a dedicated component.
+  - For the fullpage version, a controller will `Plug.Conn.send_resp` the compiled "index.html" file of the SPA. In the controller, we hard code the token (available in the "conn.assigns") into this file. Then Javascript will be able to read it and use it.
+- both versions will use the `_csrf_token` for the main `Socket` websocket, renewed each time we mount a new Liveview.
 
 ## "hooked" SPA
 
@@ -94,14 +94,13 @@ You will also need to:
 - add "type=module" in the "my_app_web/components/layouts/root.html.heex" file as code splitting works with ESM (using `import`).
 
 ```html
-<script defer phx-track-static type="module" type="text/javascript"
-src={~p"/assets/app.js"}>
+<script defer phx-track-static type="module" type="text/javascript" src={~p"/assets/app.js"}></script>
 ```
 
 - use `"type": "module"` in "/assets/package.json"
 
-```json
-...
+```js
+//...
 "type": "module",
 "dependencies": {
    "@solidjs/router": "^0.8.2",
@@ -266,7 +265,30 @@ socket.connect();
 export { socket };
 ```
 
-We also built a helper `useChannel`. It attaches a channel to the socket with a topic and returns the channel, ready to be used (`.on`, `.push`). Use it every time you need to communicate with the backend. It has a cleaning stage in its life cycle.
+We also built a helper `useChannel`. It attaches a channel to the socket with a topic and returns the channel, ready to be used (`.on`, `.push`). Use it every time you need to create a channel and communicate with the backend. It has a cleaning stage in its life cycle.
+
+```js
+import { onCleanup } from "solid-js";
+
+export default function useChannel(socket, topic) {
+  if (!socket) return null;
+  const channel = socket.channel(topic, { user_token: window.userToken });
+  channel
+    .join()
+    .receive("ok", () => {
+      console.log("Joined successfully");
+    })
+    .receive("error", (resp) => {
+      console.log("Unable to join", resp);
+    });
+  onCleanup(() => {
+    console.log("closing channel");
+    channel.leave();
+  });
+
+  return channel;
+}
+```
 
 #### Server-side
 
@@ -294,15 +316,6 @@ The connection should be fine now.
 A channel is an Elixir process derived from a Genserver: it is therefore capable of emitting and receiving messages.
 A channel is uniquely identified by a string and attached to the `socket` which accepts a list of channels.
 
-```js
-const socket = new Socket(...)
-[...]
-const ctxCh = socket.channel("ctx", {})
-const countCh = socket.channel("counter", {})
-```
-
-The channels are set up to persist state within the SPA.
-
 - Whenever we `push` data through a channel client-side, its alter ego server-side will receive it in a callback `handle_in`.
 - we can push data from the server to the client through the socket with a `broadcast` related to a topic. The client will receive it with the listener `mychannel.on`.
 
@@ -310,31 +323,6 @@ To set up a channel, use the generator:
 
 ```bash
 mix phx.gen.channel Counter
-```
-
-The Javascript snippet to create a channel:
-
-```js
-import { onCleanup } from "solid-js";
-
-export default function useChannel(socket, topic) {
-  if (!socket) return null;
-  const channel = socket.channel(topic, { user_token: window.userToken });
-  channel
-    .join()
-    .receive("ok", () => {
-      console.log("Joined successfully");
-    })
-    .receive("error", (resp) => {
-      console.log("Unable to join", resp);
-    });
-  onCleanup(() => {
-    console.log("closing channel");
-    channel.leave();
-  });
-
-  return channel;
-}
 ```
 
 ## State persistence
@@ -353,8 +341,6 @@ To enable **Google One tap**, there is a module `:google_certs`. It needs the de
 
 `Joken` will bring in `JOSE` which is used to decrypt the PEM version.
 
-#### Google credentials
-
 You will need credentials from Google.
 
 - create a project in the <https://console.cloud.google.com>
@@ -367,7 +353,7 @@ You set up a "one_tap_controller". It is a POST endpoint and will receive a resp
 
 #### Source .env
 
-Don't forget to add the crendetials in ".env".
+Don't forget to add the credentials in ".env".
 
 ```bash
 # .env-dev
@@ -404,61 +390,28 @@ You will also need to secure the scripts used to pass the token to the `window` 
 
 ### Serving static files
 
-We could further reduce the load on the Phoenix backend by using a reverse proxy (Nginx > Caddy) with cache control. It would serve the static files and pass the WS connections and HTTP connections to the backend. Target is "localhost:80" ot point to the Cowboy web-server at "localhost:4000".
+We could further reduce the load on the Phoenix backend by using a reverse proxy (Nginx > Caddy) with cache control. It would serve the static files and pass the WS connections and HTTP connections to the backend.
 
 #### Nginx
 
-Relative paths in Nginx are resolved based on the Nginx installation directory, not the current working directory or the location of the configuration file.
+The easiest way to use Nginx is to use a container running an NGINX image. We can mount the config file and the static files inside it.
 
-Run an Nginx image in detached mode (background mode). Name the container "web". We run the command "nginx":
+> Relative paths in Nginx are resolved based on the Nginx installation directory, not the current working directory or the location of the configuration file.
+> It will serve the static files and reverse proxy the app.
 
-```bash
-docker run -it --rm -d -p 8080:80 --name web  nginx
-# stop it
-docker stop web
-
-```
-
-Enter in it and check:
-
-```bash
-docker run -it --rm -d -p 8080:80 --name web  nginx
-ls /usr/share/nginx/
-```
-
-Create a folder "rp" and insert an "index.html" file. Then bind it into the container:
-
-```bash
-docker run -it --rm -d -p 8080:80 --name web -v ./rp:/usr/share/nginx/html nginx
-```
-
-It should work. Automate this with a Dockerfile (located in the folder /docker/nginx). The image will use the underlying `entrypoint` and `cmd` provided by the NGINX image.
+Create a Dockerfile that takes an NGINX image and copy the static files "priv/static/assets" and "/priv/static/spa" into the folder "/usr/share/nginx/".
 
 ```bash
 docker build -t webserver -f ./docker/nginx/Dockerfile .
-# check
-docker images
-# run a container from the image
 docker run -it --rm -p 80:80 --name web -v $(pwd)/solid.conf:/etc/nginx/conf.d/default.conf webserver
-# check
-docker ps
-
 ```
 
-Check `nginx` local config:
+The image will use the underlying `entrypoint` and `cmd` provided by the NGINX image. Enter in it and check:
 
 ```bash
-nginx -c $(pwd)/config.conf -t
-#check listening port
-lsof -i :80
-
+docker exec -it web bash
+ls /usr/share/nginx/
 ```
-
-```bash
-
-```
-
-and recompile the SPA so that
 
 ### Notes on SQLITE
 
