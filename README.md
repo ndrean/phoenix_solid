@@ -1,6 +1,6 @@
 # PhxSolid
 
-The project is to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix app. It starts as a normal Phoenix SSR app with a login. It will render two versions of an SPA: one embedded with a "hook" in a Liveview, and the other rendered in a separate page.
+The project is to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix app. It starts as a normal Phoenix SSR app with a login to authenticate the user. We used a simple Google One Tap login. It will render two versions of an SPA: one embedded with a "hook" in a Liveview, and the other rendered in a separate page.
 
 The SPA will commmunicate with the Phoenix node through an authenticated websocket. Channels will be set up to maintain the state of the SPA as well as push information from the backend to the SPA.
 
