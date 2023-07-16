@@ -26,7 +26,7 @@ defmodule PhxSolidWeb.SPAController do
 
         try do
           # for a release
-          Application.app_dir(:phx_solid) <> "/" <>
+          # Application.app_dir(:phx_solid) <> "/" <>
           @spa_dir <> "index.html"
           |> File.stream!([], :line)
           |> Enum.reduce("", fn l, file ->

@@ -65,7 +65,7 @@ defmodule PhxSolid.MixProject do
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.deploy": [
         "tailwind default --minify",
-        "cmd --cd assets node build.mjs --deploy",
+        "cmd --cd assets node build.js --deploy",
         "phx.digest"
       ]
     ]

@@ -47,16 +47,16 @@ defmodule PhxSolidWeb.WelcomeLive do
         _ -> "#" <> Map.get(qstring, "display")
       end
 
-    active = fn current -> [base, current === view && styled] end
+      active = fn current -> [base, current === view && styled] end
 
-    display = fn view ->
-      @nav_elts
-      |> Enum.filter(&(&1 !== view))
-      |> Enum.reduce(%JS{}, fn elt, acc ->
-        acc |> JS.hide(to: elt)
-      end)
-      |> JS.show(to: view)
-    end
+      display = fn view ->
+        @nav_elts
+        |> Enum.filter(&(&1 !== view))
+        |> Enum.reduce(%JS{}, fn elt, acc ->
+          acc |> JS.hide(to: elt)
+        end)
+        |> JS.show(to: view)
+      end
 
     {:noreply, assign(socket, active: active, display: display)}
   end

@@ -5,7 +5,7 @@ const args = process.argv.slice(2);
 const watch = args.includes("--watch");
 const deploy = args.includes("--deploy");
 
-const loader = { ".mjs": "jsx", ".svg": "file" };
+const loader = { ".js": "jsx", ".svg": "file" };
 
 const plugins = [solidPlugin()];
 
@@ -19,12 +19,14 @@ let opts = {
   external: ["*.css", "fonts/*", "images/*"],
   loader: loader,
   plugins: plugins,
+  format: "esm",
 };
 
 if (deploy) {
   opts = {
     ...opts,
     minify: true,
+    splitting: true,
   };
 }
 
@@ -38,7 +40,8 @@ if (watch) {
     .then((ctx) => {
       ctx.watch();
     })
-    .catch((_error) => {
+    .catch((error) => {
+      console.log(`Build error: ${error}`);
       process.exit(1);
     });
 } else {

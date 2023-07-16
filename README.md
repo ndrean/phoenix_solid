@@ -1,32 +1,78 @@
 # PhxSolid
 
-We present a Phoenix app that starts as a normal Phoenix SSR app. It will render two versions of an JS SPA: one an embeddedwithin a hook, and the other rendered in a separate page.
+We present a Phoenix app that starts as a normal Phoenix SSR app with a login. It will render two versions of an JS SPA: one an embedded with a "hook" in a Liveview, and the other rendered in a separate page.
 
 The SPA will commmunicate with the Phoenix node through an authenticated websocket. Channels will be set up to maintain the state of the SPA as well as push information from the backend to the SPA.
 
 The SPA uses [SolidJS](https://www.solidjs.com/).
 
-What is the difference between the two options? The built version of the SPA has code splitting with 9 files produced, the main chunk is 50k, and a total of 55kb unzipped (compiled with `vite build` using `Rollup`)). The embedded version ships "app.js" and the "spa.js" with respective size of 130kb and 55kb (compiled with Esbuild via `node build.js --deploy`)
+What are the difference between the two options?
 
-## Boilerplates
+- the full page is built with `Vite` (with Esbuild and Rollup). The compilation of the fullpage code is a custom process. The embedded version is compiled with `Esbuild` only via a modified `mix assets.deploy`: you need to use a custom "build" version of Esbuild. Rollup is _more performant_ than Esbuild to minimize the size of the bundles.
+- to use authenticated websockets, we [adapt the documentation](https://hexdocs.pm/phoenix/channels.html#using-token-authentication). Once the user is authenticated, we generate a `Phoenix.Token`.
+  - when we use the embedded SPA, we pass this "user token" into the `conn.assigns` from a Phoenix controller and it will be available in the HTML "root.html.heex" template. It is hard coded, atatched to the `window` object and Javascript will be able to read it. For the backend Liveview, we pass it into a session so available in the `Phoenix.LiveView.mount/3` callback. The embedded version will be declared via a dataset `phx-hook` and rendered in a dedicated component.
+  - For the fullpage version, a controller will `Plug.Conn.send_resp` an "index.html" file. We hard code the token (available in the "conn.assigns") into this file. Then Javascript will be able to read it and use it.
+- both version will use the `_csrf_token` for the main `Socket` websocket, renewed each time we mount a new Liveview.
 
-### Phoenix
+## "hooked" SPA
 
-```bash
-mix phx.new phx_solid
+### Esbuild
+
+You need to modify the `Esbuild` configuration to use the custom plugin `solidPlugin`. Since SolidJS uses JSX for templating, we have to be sure Esbuild compiles the JSX files for **SolidJS**.
+
+The Phoenix documentation explains [how to add a plugin](https://hexdocs.pm/phoenix/asset_management.html#esbuild-plugins). Esbuild will build the assets when we run the following function:
+
+```js
+// build.js
+import { context, build } from "esbuild";
+import { solidPlugin } from "esbuild-plugin-solid";
+
+const args = process.argv.slice(2);
+const watch = args.includes("--watch");
+const deploy = args.includes("--deploy");
+
+// Define esbuild options
+let opts = {
+  entryPoints: ["js/app.js", "js/solidAppHook.js"],
+  bundle: true,
+  logLevel: "info",
+  target: "es2021",
+  outdir: "../priv/static/assets",
+  external: ["*.css", "fonts/*", "images/*"],
+  loader: { ".js": "jsx", ".svg": "file" },
+  plugins: [solidPlugin()],
+  format: "esm",
+};
+
+if (deploy) {
+  opts = {
+    ...opts,
+    minify: true,
+    splitting: true,
+  };
+}
+
+if (watch) {
+  opts = {
+    ...opts,
+    sourcemap: "inline",
+  };
+
+  context(opts)
+    .then((ctx) => {
+      ctx.watch();
+    })
+    .catch((_error) => {
+      process.exit(1);
+    });
+} else {
+  build(opts);
+}
 ```
 
-### SolidJS: **"hooked"**
+To take advantage of the code splitting, pass `splitting: true` so that the deploy `node build.js --deploy` will split the code into chunks.
 
-#### Esbuild
-
-In this case, you need to modify the `Esbuild` configuration given in Phoenix. Since SolidJS uses JSX for templating, we have to be sure Esbuild compiles for **SolidJS** files and not for _React_. It is explained in the Phoenix doc how to add a plugin.
-
-<https://hexdocs.pm/phoenix/asset_management.html#esbuild-plugins>
-
-We followed the doc, build the file `/assets/build.js`, run it (`node build.js`) and modified the "dev.config".
-
-The "config.exs" file will only contain the version:
+The "config.exs" file will only contain the required version:
 
 ```elixir
 # config.exs
@@ -34,11 +80,51 @@ config :esbuild,
   version: "0.17.11"
 ```
 
-Instead of doing `mix assets.deploy`, you do (in the "assets" folder) `node build.js --deploy`.
+To run `build.s`, the documentation explains to modify the alias `mix assets.deploy` defined in the Mix.Project: you run `node build.js --deploy` in the "/assets" folder.
+
+```elixir
+"assets.deploy": [
+  "tailwind default --minify",
+  "cmd --cd assets node build.js --deploy",
+  "phx.digest"
+]
+```
+
+You will also need to:
+
+- check how to [configure Tailwind with Tailwind](https://tailwindcss.com/docs/guides/phoenix)
+- add "type=module" in the "my_app_web/components/layouts/root.html.heex" file as code splitting works with ESM (using `import`).
+
+```html
+<script defer phx-track-static type="module" type="text/javascript"
+src={~p"/assets/app.js"}>
+```
+
+- use `"type": "module"` in "/assets/package.json"
+
+```json
+...
+"type": "module",
+"dependencies": {
+   "@solidjs/router": "^0.8.2",
+   "bau-solidcss": "^0.1.14",
+   "phoenix": "file:../deps/phoenix",
+   "phoenix_html": "file:../deps/phoenix_html",
+   "phoenix_live_view": "file:../deps/phoenix_live_view",
+   "solid-js": "^1.7.7",
+   "topbar": "^2.0.1"
+ },
+ "devDependencies": {
+   "esbuild": "^0.18.11",
+   "esbuild-plugin-solid": "^0.5.0",
+   "@tailwindcss/forms": "^0.5.4",
+   "tailwindcss": "^3.3.3"
+ }
+```
 
 #### Mount an SPA as a hook to a Liveview
 
-We will mount a LiveView and render a component. This component has a "hook" attached, declared via a dataset `phx-hook=solidAppHook` in the HTML. This hook references the SPA JS code.
+We will mount a LiveView and render a component. This component has a "hook" attached, declared via a dataset `phx-hook="solidAppHook"` in the HTML. This hook references the SPA Javascript code.
 
 ```elixir
 use Phoenix.Component
@@ -49,30 +135,7 @@ def display(assigns) do
 end
 ```
 
-Firstly navigate to the "assets" folder and install the dependencies:
-
-```json
-"dependencies": {
-   "@solidjs/router": "^0.8.2",
-   "bau-solidcss": "^0.1.14",
-   "phoenix": "file:../deps/phoenix",
-   "phoenix_html": "file:../deps/phoenix_html",
-   "phoenix_live_view": "file:../deps/phoenix_live_view",
-   "solid-js": "^1.7.7"
- },
- "devDependencies": {
-   "esbuild": "^0.18.11",
-   "esbuild-plugin-solid": "^0.5.0"
- }
-```
-
-```bash
-cd assets
-pnpm init
-pnpm install
-```
-
-We will attach an object "hook" to the `LiveSocket` (the one authneticated with the `_csrf_token`). This "hook" will contain the code of the SPA.
+We will attach an object "hook" to the `LiveSocket` (the one authenticated with the `_csrf_token`).
 
 ```js
 //app.js
@@ -84,7 +147,7 @@ let liveSocket = new LiveSocket("/live", Socket, {
 });
 ```
 
-The code of the hook will run the main function of the SPA.
+The code of the hook:
 
 ```js
 //SolidAppHook.js
@@ -93,7 +156,7 @@ const SolidAppHook = {
 }
 ```
 
-The component will be stateless, but it can be statefull as well. The communication between the Javascript and Elixir will happen through the websocket. To this websocket, we will attach a `channel`, a Genserver with a pubsub. With this in place, we will be able to have two ways communication. The state will be maintained in the Liveview.
+You set up a "user_socket" and authenticate it in the backend with the "user token". We will attach a `channel`to have two ways communication between the front and the back.
 
 > The SPA offers a navigation, in particular a link to return to Phoenix. We need to pass this via env variables. This is done with `Vite` with `import.meta.env.VITE_XXX`. Vite already has `dotenv` installed. All this is [explained by the doc](https://vitejs.dev/guide/env-and-mode.html#env-files). You can use just like this to reference the URL to which we want to navigate back.
 
@@ -106,23 +169,6 @@ The component will be stateless, but it can be statefull as well. The communicat
 VITE_RETURN_URL=http://localhost:4000/welcome
 ```
 
-#### Mix assets.deploy
-
-Since we run the function "build.js", we need to modify the command in the "aliases" function as:
-
-```elixir
-defp aliaises do
-[
-  "assets.deploy": [
-    "tailwind default --minify",
-    "cmd --cd assets node build.js --deploy",
-    "phx.digest"
-  ]
-]
-```
-
-Remember, `mix phx.digset.clean --all`
-
 ## Navigation with Phoenix/Liveview
 
 Once you are authenticated via the sign-in, you are redirected to a Liveview. We set up a [tab like navigation](https://dev.to/ndrean/breadcumbs-with-phoenix-liveview-2d40) where you can choose to render the SPA in a full page or run the embedded SPA.
@@ -131,7 +177,9 @@ The full page SPA will be the "built" version and be rendered by `Plug.Conn.send
 
 An `on mount` function is run on each mount of the liveview as [recommended by the doc](https://hexdocs.pm/phoenix_live_view/security-model.html#mounting-considerations).
 
-### SolidJS: **non hook**
+## **non hook** SPA
+
+The boilerplate is:
 
 ```bash
 cd phx_solid
@@ -159,14 +207,14 @@ export default defineConfig({
   def static_paths, do: ~w(assets fonts images favicon.ico robots.txt) ++ ["spa"]
 ```
 
-so the "endpoint.ex" gets the correct config:
+Add this folder to the "endpoint.ex" gets the correct config:
 
 ```elixir
 #endpoint.ex
 plug Plug.Static,
   at: "/",
   from: :phx_solid,
-  gzip: false,
+  gzip: true,
   cache_control_for_etags: "public, max-age = 31_536_00",
   only: PhxSolidWeb.static_paths()
 ```
@@ -175,43 +223,21 @@ plug Plug.Static,
 
 We will compile the JS/CSS and copy the files into the folder "priv/static/spa":
 
-```elixir
-# config.exs
-Application.compile_env!(:phx_solid, :spa_dir)
-# .env
- = System.fetch_env!("SPA_DIR")
- = "./priv/static/spa`
-```
-
 We set up a [mix task](https://hexdocs.pm/mix/Mix.html) to compile and copy. It uses the behaviour "Mix.Task" and provides a `call/1` function to run these tasks.
 
 ```bash
 mix spa
 ```
 
-### SPA rendering
+## User token
 
-The compiled files are located in the "priv/state/spa" (declared in our "config.exs").
-
-We set up an endpoint "/spa" to render the SPA. The corresponding controller will read the compiled "index.html" + associated JS + CSS files. It will also inject into the file a `user_token` from the session, and attached it to the `window` object via a script: the browser will read it. We render these files with `Phoenix.Controller.html(conn, file)`.
-
-Each time we will navigate to the build version, Phoenix will inject the current `user_token`. This will garantee the validity of the websocket connection since we will check the token with the alter eog function `Phoenix.Token.verify`
-
-## Generate a token per user
-
-We generate a token per user's email (or id) after the sign-in.
+We generate a token per user after the sign-in.
 
 ```elixir
-Phoenix.Token.sign(PhxSolidWeb.Endpoint,"user_token", email )
+Phoenix.Token.sign(PhxSolidWeb.Endpoint,"user_token", id )
 ```
 
-## Passing data between Plug (HTTP) and Liveview
-
-We insert this token (or user.id) into the `session` with `Plug.Conn.put_session(conn, key, value)`. Any plug has access to the session, as well as Liveview in the `mount/3`.
-
-## Passing data from Phoenix to the SPA
-
-We also inject
+We can check the validity of the websocket connection since we will check the token with the alter ego function `Phoenix.Token.verify`
 
 ## Passing data between the SPA and Phoenix
 
@@ -302,7 +328,7 @@ To enable **Google One tap**, there is a module `:google_certs`. It needs the de
 {:jason, "~> 1.4"},{:joken, "~> 2.5"}
 ```
 
-`Joken` will bring in `JOSE` which I used to decrrypt the PEM version.
+`Joken` will bring in `JOSE` which is used to decrypt the PEM version.
 
 #### Google credentials
 
@@ -411,9 +437,7 @@ lsof -i :80
 
 and recompile the SPA so that
 
-### SQLITE
-
-- migration in a release without Mix installed: "release.ex"
+### Notes on SQLITE
 
 - check after migration
 
@@ -421,14 +445,12 @@ and recompile the SPA so that
 mix ecto.create
 mix ecto.gen.migration create_users_table
 mix ecto.migrate
-sqlite3 phx_solid_dev .schema
+sqlite3 phx_solid .schema
 ```
 
-```elixir
-PhxSolid.Repo.get_by!(PhxSolid.User, %{id: 1})
-```
+- [migration in a release without Mix installed](https://hexdocs.pm/phoenix/releases.html#ecto-migrations-and-custom-commands): "release.ex"
 
-Upserts with SQLite3 works when the target field has a unique constrainte (`create unique_index` in te migration): <https://www.sqlite.org/lang_UPSERT.html>
+- [upserts with SQLite3](https://www.sqlite.org/lang_UPSERT.html) works when the target field has a unique constrainte (`create unique_index` in the migration):
 
 ```elixir
 Repo.insert!(
