@@ -2,7 +2,6 @@ defmodule PhxSolidWeb.SPAController do
   use PhxSolidWeb, :controller
   require Logger
 
-  # @spa_dir Application.compile_env!(:phx_solid, :spa_dir)
   @title "    <title>Solid App</title>\n"
 
   defp read_line(:eof, file, _token), do: file
@@ -14,6 +13,7 @@ defmodule PhxSolidWeb.SPAController do
   defp read_line(curr, file, _token), do: file <> curr
 
   defp index_html do
+    # line below for the release
     Application.app_dir(:phx_solid) <> "/" <>
     Application.get_env(:phx_solid, :spa_dir)
     <>  "index.html"

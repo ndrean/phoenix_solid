@@ -1,13 +1,15 @@
 # PhxSolid
 
-The project is to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix app. It starts as a normal Phoenix SSR app with a login to authenticate the user. We used a simple Google One Tap login. It will render two versions of an SPA: one embedded with a "hook" in a Liveview, and the other rendered in a separate page.
+The project is to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix app. It will render two versions of an SPA: one embedded with a "hook" in a Liveview, and the other rendered in a separate page.
+
+It starts as a normal Phoenix SSR app with a login to authenticate the user. We used a simple Google One Tap login.
 
 The SPA will commmunicate with the Phoenix node through an authenticated websocket. Channels will be set up to maintain the state of the SPA as well as push information from the backend to the SPA.
 
 What are the differences between the two options?
 
 - the full page is built with `Vite` (with Esbuild and Rollup). The compilation of the fullpage code is a custom process, run via a `Task`. The embedded version is compiled with `Esbuild` via a modified `mix assets.deploy`: you set up a custom "build" version of Esbuild. Rollup is _more performant_ than Esbuild to minimize the size of the bundles.
-- to use authenticated websockets, we [adapt the documentation](https://hexdocs.pm/phoenix/channels.html#using-token-authentication). Once the user is authenticated, we generate a `Phoenix.Token`.
+- to use authenticated websockets with an authneticated user, we need to [adapt the documentation](https://hexdocs.pm/phoenix/channels.html#using-token-authentication). We firstly generate a `Phoenix.Token`.
   - when we use the embedded SPA, we pass this "user token" into the `conn.assigns` from a Phoenix controller and it will be available in the HTML "root.html.heex" template. It is hard coded, attached to the `window` object so Javascript is able to read it. For the backend Liveview, we pass it into a session so available in the `Phoenix.LiveView.mount/3` callback. The embedded version will be declared via a dataset `phx-hook` and rendered in a dedicated component.
   - For the fullpage version, a controller will `Plug.Conn.send_resp` the compiled "index.html" file of the SPA. In the controller, we hard code the token (available in the "conn.assigns") into this file. Then Javascript will be able to read it and use it.
 - both versions will use the `_csrf_token` for the main `Socket` websocket, renewed each time we mount a new Liveview.
@@ -16,7 +18,7 @@ What are the differences between the two options?
 
 ### Esbuild
 
-You need to modify the `Esbuild` configuration to use the custom plugin `solidPlugin`. Since SolidJS uses JSX for templating, we have to be sure Esbuild compiles the JSX files for **SolidJS**.
+You set up a custom `Esbuild` configuration to use the [custom plugin `solidPlugin`](https://github.com/amoutonbrady/esbuild-plugin-solid). Since SolidJS uses JSX for templating, we have to be sure Esbuild compiles the JSX files for **SolidJS**.
 
 The Phoenix documentation explains [how to add a plugin](https://hexdocs.pm/phoenix/asset_management.html#esbuild-plugins). Esbuild will build the assets when we run the following function:
 
@@ -90,14 +92,14 @@ To run `build.s`, the documentation explains to modify the alias `mix assets.dep
 
 You will also need to:
 
-- check how to [configure Tailwind with Tailwind](https://tailwindcss.com/docs/guides/phoenix)
+- check how to [configure Tailwind with Phoenix](https://tailwindcss.com/docs/guides/phoenix)
 - add "type=module" in the "my_app_web/components/layouts/root.html.heex" file as code splitting works with ESM (using `import`).
 
 ```html
 <script defer phx-track-static type="module" type="text/javascript" src={~p"/assets/app.js"}></script>
 ```
 
-- use `"type": "module"` in "/assets/package.json"
+- declare you are using `"type": "module"` in "/assets/package.json"
 
 ```js
 //...
@@ -187,29 +189,21 @@ export default defineConfig({
 });
 ```
 
-- `Phoenix`: in the module "app_web.ex", add the folder "spa" to "static_paths"
+- modify "/front/src/index.html". In this file, add a "title" in the "head" tag. This will help to insert programmaticaly the "user_token" in this file as seen further down.
+
+```html
+<title>Solid App</title>
+```
+
+- `Phoenix`: in the module "app_web.ex", add the folder "spa" to "static_paths" so the "endpoint.ex" gets the correct config through `plug Plug.Static, only: PhxSolidWeb.static_paths()`
 
 ```elixir
   def static_paths, do: ~w(assets fonts images favicon.ico robots.txt) ++ ["spa"]
 ```
 
-Add this folder to the "endpoint.ex" gets the correct config:
-
-```elixir
-#endpoint.ex
-plug Plug.Static,
-  at: "/",
-  from: :phx_solid,
-  gzip: true,
-  cache_control_for_etags: "public, max-age = 31_536_00",
-  only: PhxSolidWeb.static_paths()
-```
-
 ### Build the rendered SPA
 
-We will compile the JS/CSS and copy the files into the folder "priv/static/spa":
-
-We set up a [mix task](https://hexdocs.pm/mix/Mix.html) to compile and copy. It uses the behaviour "Mix.Task" and provides a `call/1` function to run these tasks.
+We will compile the "front" files and copy them into the folder "priv/static/spa". We set up a [mix task](https://hexdocs.pm/mix/Mix.html) for this.
 
 ```bash
 mix spa
@@ -217,9 +211,9 @@ mix spa
 
 ### Render the "non-hook" SPA
 
-The controller "spa_controller" reads the compiled "index.html" from the "priv/static/spa" folder and adds the "user_token" inside a "script" tag. To put this into the "head" tag, we added `<title>Solid app</title>` in the "index.html" file of the SPA. When we read the file line by line and encounter this particular line, then we add the "script" tag" and add the "user_token" value from the session. We end the controller with a `Plug.Conn.send_resp`.
+The route "/spa" will call the controller "spa_controller". It reads the compiled "index.html" file from the "priv/static/spa" folder and adds the "user_token" inside a "script" tag. To put this into the "head" tag, we added `<title>Solid app</title>` in the "index.html" file of the SPA. When we read the file line by line and encounter this particular line, we add the "script" tag" with the "user_token" value from the session. We end the controller with a `Plug.Conn.send_resp`.
 
-Note that the file path is defined by the function:
+Note that the file path is defined by the function below. We need to add `Application.app_dir(:phx_solid` for the **mix release** version to find this file.
 
 ```elixir
 defp index_html do
@@ -228,8 +222,6 @@ defp index_html do
   <>  "index.html"
 end
 ```
-
-> we need to add `Application.app_dir(:phx_solid` for the **release** version to find this file.
 
 ### Return from SPA to Phoenix
 
