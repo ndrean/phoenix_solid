@@ -10,8 +10,10 @@ import Config
 config :phx_solid,
   google_client_id: System.get_env("GOOGLE_CLIENT_ID"),
   google_client_secret: System.get_env("GOOGLE_CLIENT_SECRET"),
-  google_scope: "profile email",
-  spa_dir: System.fetch_env!("SPA_DIR")
+  google_scope: "profile email"
+
+config :phx_solid,
+  spa_dir: System.get_env("SPA_DIR")
 
 config :phx_solid,
   ecto_repos: [PhxSolid.Repo]

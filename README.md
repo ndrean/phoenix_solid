@@ -163,17 +163,6 @@ The full page SPA will be the "built" version and be rendered by `Plug.Conn.send
 
 An `on mount` function is run on each mount of the liveview as [recommended by the doc](https://hexdocs.pm/phoenix_live_view/security-model.html#mounting-considerations).
 
-> The SPA offers a navigation, in particular a link to return to Phoenix. We need to pass this via env variables. This is done with `Vite` with `import.meta.env.VITE_XXX`. Vite already has `dotenv` installed. All this is [explained by the doc](https://vitejs.dev/guide/env-and-mode.html#env-files). You can use just like this to reference the URL to which we want to navigate back.
-
-```js
-<a href={import.meta.env.VITE_RETURN_URL}>...</a>
-```
-
-```bash
-# .env
-VITE_RETURN_URL=http://localhost:4000/welcome
-```
-
 ## **non hook** SPA
 
 The boilerplate is:
@@ -224,6 +213,35 @@ We set up a [mix task](https://hexdocs.pm/mix/Mix.html) to compile and copy. It 
 
 ```bash
 mix spa
+```
+
+### Render the "non-hook" SPA
+
+The controller "spa_controller" reads the compiled "index.html" from the "priv/static/spa" folder and adds the "user_token" inside a "script" tag. To put this into the "head" tag, we added `<title>Solid app</title>` in the "index.html" file of the SPA. When we read the file line by line and encounter this particular line, then we add the "script" tag" and add the "user_token" value from the session. We end the controller with a `Plug.Conn.send_resp`.
+
+Note that the file path is defined by the function:
+
+```elixir
+defp index_html do
+  Application.app_dir(:phx_solid) <> "/" <>
+  Application.get_env(:phx_solid, :spa_dir)
+  <>  "index.html"
+end
+```
+
+> we need to add `Application.app_dir(:phx_solid` for the **release** version to find this file.
+
+### Return from SPA to Phoenix
+
+The SPA offers a navigation, in particular a link to return to Phoenix. We need to pass this via env variables. This is done with `Vite` with `import.meta.env.VITE_XXX`. Vite already has `dotenv` installed. All this is [explained by the doc](https://vitejs.dev/guide/env-and-mode.html#env-files). You can use just like this to reference the URL to which we want to navigate back.
+
+```js
+<a href={import.meta.env.VITE_RETURN_URL}>...</a>
+```
+
+```bash
+# .env
+VITE_RETURN_URL=http://localhost:4000/welcome
 ```
 
 ## User token
@@ -414,6 +432,8 @@ ls /usr/share/nginx/
 ```
 
 ### Notes on SQLITE
+
+Gist: <https://gist.github.com/mcrumm/98059439c673be7e0484589162a54a01>
 
 - check after migration
 
