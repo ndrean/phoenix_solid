@@ -35,6 +35,7 @@ defmodule PhxSolidWeb.Router do
     get "/", PageController, :home
     live "/welcome", WelcomeLive
     get "/spa", SPAController, :index
+    get "/fb_login", FbSdkController, :login
   end
 
   # Other scopes may use custom stacks.

@@ -1,7 +1,7 @@
 // If you want to use Phoenix channels, run `mix help phx.gen.channel`
 import "./user_socket.js";
 import onlineStatus from "./onlineStatus.js";
-// import { Facebook } from "./facebook";
+import { Facebook } from "./facebook";
 import { SolidAppHook } from "./solidAppHook.js";
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
 import "phoenix_html";
@@ -40,7 +40,7 @@ const oneTap = document.querySelector("#g_id_onload");
 if (oneTap) oneTap.dataset.login_uri = window.location.href + "auth/one_tap/";
 
 //  FB-SDK
-const fbutton = document.getElementById("fbhook");
+const fbutton = document.querySelector("#fb-btn");
 if (fbutton) Facebook(fbutton);
 
 const online = document.getElementById("online");

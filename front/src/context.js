@@ -1,4 +1,7 @@
 import { createSignal } from "solid-js";
+import BauSolidCss from "bau-solidcss";
+
+const { css, styled, keyframes } = BauSolidCss();
 
 const [bool, setBool] = createSignal(false),
   [data, setData] = createSignal(0),
@@ -11,4 +14,7 @@ export default {
   setData,
   slide,
   setSlide,
+  css,
+  styled,
+  keyframes,
 };

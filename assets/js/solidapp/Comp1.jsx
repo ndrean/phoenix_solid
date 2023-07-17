@@ -17,7 +17,6 @@ const comp1 = (ctx) => {
 
     return (
       <div>
-        <Counter />
         <input
           type="range"
           min="10"

@@ -19,7 +19,9 @@ config :phx_solid,
   ecto_repos: [PhxSolid.Repo]
 
 config :phx_solid, PhxSolid.Repo,
-  database: System.get_env("DATABASE_PATH") || Path.expand("../db/phx_solid.db", Path.dirname(__ENV__.file)),
+  database:
+    System.get_env("DATABASE_PATH") ||
+      Path.expand("../db/phx_solid.db", Path.dirname(__ENV__.file)),
   key: "secret",
   pool_size: 5,
   show_sensitive_data_on_connection_error: true
@@ -32,7 +34,15 @@ config :phx_solid, PhxSolidWeb.Endpoint,
     layout: false
   ],
   pubsub_server: PhxSolid.PubSub,
-  live_view: [signing_salt: "WDPkDNzDwUG1jPxEDcag+XYKvVPEEPoZ"]
+  live_view: [signing_salt: "WDPkDNzDwUG1jPxEDcag+XYKvVPEEPoZ"],
+  http: [port: 4000]
+
+# https: [
+#  port: 4001,
+#  cipher_suite: :strong,
+#  certfile: "priv/cert/selfsigned.pem",
+#  keyfile: "priv/cert/selfsigned_key.pem"
+# ]
 
 # Configures the mailer
 #

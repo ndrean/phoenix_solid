@@ -16,7 +16,7 @@ defmodule PhxSolidWeb.UserProfile do
       </h1>
       <p>
         You <strong>signed in</strong>
-        with <%= @origin %> with youraccount:
+        with <%= @origin %> with your account:
         <strong style="color:teal;"><%= @profile.email %></strong>
       </p>
       <hr />

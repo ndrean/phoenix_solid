@@ -1,28 +1,33 @@
-localhost:80 {
-    encode gzip
+:80 {
+	# encode gzip
+	log
 
-    handle_path /assets/ {
-        root * ./priv/static/assets
-        file_server
-        header {
-             Cache-Control "public"
-            Expires "max"
-        }
-    }
-    handle_path /spa/ {
-        root * ./priv/static/spa
-        file_server
-        header {
-            Cache-Control "public"
-            Expires "max"
-        }
-    }
+	handle_path /images/ {
+		root * ./priv/static/images/*
+		file_server /images/*
+		header {
+			Cache-Control "public"
+			Expires "max"
+		}
+	}
 
+	handle_path /assets/ {
+		root * ./priv/static/assets/*
+		file_server /assets/*
+		header {
+			Cache-Control "public"
+			Expires "max"
+		}
+	}
 
-    handle  {
-        reverse_proxy localhost:4000
-    }
+	handle_path /spa/ {
+		root * ./priv/static/spa*
+		file_server
+		header {
+			Cache-Control "public"
+			Expires "max"
+		}
+	}
+
+	reverse_proxy localhost:4000
 }
-
-
- 

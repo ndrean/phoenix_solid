@@ -41,5 +41,5 @@ npm-debug.log
 .credo*
 phx_solid_dev
 phx_solid_dev-*
-
+/priv/cert
 .env-*

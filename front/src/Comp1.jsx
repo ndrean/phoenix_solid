@@ -1,6 +1,6 @@
 import { createResource } from "solid-js";
 import context from "./context";
-import Counter from "./counter";
+// import Counter from "./counter";
 
 // async mock
 const asyncFunction = (ctx) => (x) =>
@@ -9,7 +9,7 @@ const asyncFunction = (ctx) => (x) =>
   );
 
 const comp1 = (ctx) => {
-  const { bool, setBool, data, slide, setSlide } = ctx;
+  const { bool, setBool, data, slide, setSlide, css } = ctx;
 
   return function Comp1() {
     // first async call when component is mounted
@@ -17,7 +17,6 @@ const comp1 = (ctx) => {
 
     return (
       <div>
-        <Counter />
         <input
           type="range"
           min="10"

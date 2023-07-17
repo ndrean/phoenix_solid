@@ -195,6 +195,24 @@ export default defineConfig({
 <title>Solid App</title>
 ```
 
+- installed dependencies: install [phoenix.js](https://www.npmjs.com/package/phoenix)
+
+```js
+// /front/package.json
+// ...
+"devDependencies": {
+    "solid-devtools": "^0.27.3",
+    "vite": "^4.3.9",
+    "vite-plugin-solid": "^2.7.0"
+  },
+  "dependencies": {
+    "@solidjs/router": "^0.8.2",
+    "bau-solidcss": "^0.1.15",
+    "phoenix": "^1.7.6",
+    "solid-js": "^1.7.6"
+  }
+```
+
 - `Phoenix`: in the module "app_web.ex", add the folder "spa" to "static_paths" so the "endpoint.ex" gets the correct config through `plug Plug.Static, only: PhxSolidWeb.static_paths()`
 
 ```elixir
@@ -213,7 +231,7 @@ mix spa
 
 The route "/spa" will call the controller "spa_controller". It reads the compiled "index.html" file from the "priv/static/spa" folder and adds the "user_token" inside a "script" tag. To put this into the "head" tag, we added `<title>Solid app</title>` in the "index.html" file of the SPA. When we read the file line by line and encounter this particular line, we add the "script" tag" with the "user_token" value from the session. We end the controller with a `Plug.Conn.send_resp`.
 
-Note that the file path is defined by the function below. We need to add `Application.app_dir(:phx_solid` for the **mix release** version to find this file.
+Note that the file path is defined by the function below. We need to add `Application.app_dir(:phx_solid)` for the `mix release` task to find this file.
 
 ```elixir
 defp index_html do
@@ -225,7 +243,7 @@ end
 
 ### Return from SPA to Phoenix
 
-The SPA offers a navigation, in particular a link to return to Phoenix. We need to pass this via env variables. This is done with `Vite` with `import.meta.env.VITE_XXX`. Vite already has `dotenv` installed. All this is [explained by the doc](https://vitejs.dev/guide/env-and-mode.html#env-files). You can use just like this to reference the URL to which we want to navigate back.
+The SPA offers a navigation, in particular a link to return to Phoenix. We need to pass this via env variables. This is done with `Vite` with `import.meta.env.VITE_XXX`. Vite already has `dotenv` installed as [explained by the doc](https://vitejs.dev/guide/env-and-mode.html#env-files). You can use just like this to reference the URL to which we want to navigate back.
 
 ```js
 <a href={import.meta.env.VITE_RETURN_URL}>...</a>
@@ -235,6 +253,8 @@ The SPA offers a navigation, in particular a link to return to Phoenix. We need 
 # .env
 VITE_RETURN_URL=http://localhost:4000/welcome
 ```
+
+> this has to be tested when deployed for real !!!
 
 ## User token
 
@@ -254,7 +274,7 @@ In order to save the _state of the SPA_, we use channels through the `Socket` ob
 
 ### The `socket`
 
-It is an object that holds the WS. We will set up the socket SPA side and server side. We generate the 2 files - server & client - needed to handle bith sides of the socket and install the npm package [phoenix](https://www.npmjs.com/package/phoenix) in the SPA.
+It is an object that holds the WS. We will set up the socket SPA side and server side. We generate the 2 files - server & client - needed to handle bith sides of the socket. As previsouly stated, make sure the npm package `Phoenix.js` is installed in the SPA.
 
 ```bash
 mix phx.gen.socket User
@@ -275,7 +295,7 @@ socket.connect();
 export { socket };
 ```
 
-We also built a helper `useChannel`. It attaches a channel to the socket with a topic and returns the channel, ready to be used (`.on`, `.push`). Use it every time you need to create a channel and communicate with the backend. It has a cleaning stage in its life cycle.
+We also built a helper `useChannel`. It attaches a channel to the socket with a topic and returns the channel, ready to be used (`.on`, `.push`). Use it every time you need to create a channel and communicate with the backend. It has a cleaning stage in its life cycle. For example, the SPA has a navigation; when we use a page, it opens a channel for the data in this page, and when we leave this page, this channel is closed.
 
 ```js
 import { onCleanup } from "solid-js";
@@ -464,3 +484,33 @@ Configuration in Tailwind.config
 ### Kaffy
 
 To be checked: <https://github.com/aesmail/kaffy?ref=blixt-dev>
+
+### Caddy
+
+Use `Caddy server` to reverse-proxy Cowboy. The Facebook login will work. Just do:
+
+```bash
+caddy reverse-proxy --from :80 --to: 4000
+# or if you use a config file:
+caddy run Caddyfile
+```
+
+Alternatively, you can use:
+
+```bash
+mix phx.gen.cert
+```
+
+and modify your "config.exs":
+
+```elixir
+config :phx_solid, PhxSolidWeb.Endpoint,
+  https: [
+  port: 4001,
+  cipher_suite: :strong,
+  certfile: "priv/cert/selfsigned.pem",
+  keyfile: "priv/cert/selfsigned_key.pem"
+]
+```
+
+With Chrome, set up "enable" on `chrome://flags/#allow-insecure-localhost`

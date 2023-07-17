@@ -18,7 +18,7 @@ defmodule PhxSolid.User do
   @doc """
   validate user has both :email and :name and than :email is unique
   """
-  def changeset(user, params \\ %{}) do
+  def changeset(%User{} = user, params \\ %{}) do
     user
     |> Ecto.Changeset.cast(params, [:email, :name, :user_token])
     |> Ecto.Changeset.validate_required([:email, :name])
