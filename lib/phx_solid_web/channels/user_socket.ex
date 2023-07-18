@@ -7,7 +7,7 @@ defmodule PhxSolidWeb.UserSocket do
   """
 
   ## Channels
-  channel "counter", PhxSolidWeb.CounterChannel
+  channel "counter:*", PhxSolidWeb.CounterChannel
   channel "info", PhxSolidWeb.InfoChannel
 
   @impl true

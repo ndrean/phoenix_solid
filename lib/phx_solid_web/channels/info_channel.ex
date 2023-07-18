@@ -8,9 +8,7 @@ defmodule PhxSolidWeb.InfoChannel do
 
   @impl true
   def join("info", _payload, socket) do
-    # :ok = PhxSolidWeb.Endpoint.subscribe("user_checked")
-    # check_authorized(payload)
-    # IO.inspect("join**************#{inspect(payload)}")
+    :ok = PhxSolidWeb.Endpoint.subscribe("nodes")
     send(self(), :join_info)
     {:ok, socket}
   end
@@ -26,6 +24,21 @@ defmodule PhxSolidWeb.InfoChannel do
       }
 
     broadcast!(socket, "get_info", process_info)
+    # push(socket, "get_info", process_info)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(%{"topic" => "nodes", "event" => "down", payload: node}, socket) do
+    Logger.debug("#{inspect(node)} down")
+    broadcast!(socket, "nodes_event", %{down: node})
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(%{"topic" => "nodes", "event" => "up", payload: node}, socket) do
+    Logger.debug("#{inspect(node)} up")
+    broadcast!(socket, "nodes_event", %{up: node})
     {:noreply, socket}
   end
 

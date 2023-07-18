@@ -18,23 +18,12 @@ export function Facebook(fbutton) {
       xfbml: false,
       version: "v17.0",
     });
-    fbutton.addEventListener("click", () => {
-      FB.getLoginStatus(function (response) {
-        statusChangeCallback(response);
-      });
-    });
+    fbutton.addEventListener("click", () =>
+      FB.getLoginStatus(() => startDialog())
+    );
   };
 
-  function statusChangeCallback(response) {
-    if (response.status === "connected") {
-      graphAPI();
-    } else {
-      startDialog();
-    }
-  }
-
   function graphAPI() {
-    console.log("conected");
     FB.api("/me?fields=id,email,name,picture", async function (response) {
       const url = `/fb_login?${build(response)}`;
       return (window.location.href = url);
@@ -42,13 +31,12 @@ export function Facebook(fbutton) {
   }
 
   function build(response) {
-    response.picture = JSON.stringify(response.picture.data);
+    response.picture = JSON.stringify(response.picture?.data);
     const params = new URLSearchParams(response);
     return params.toString();
   }
 
   function startDialog() {
-    console.log("start");
     FB.login(
       function (response) {
         if (response.status === "connected") {

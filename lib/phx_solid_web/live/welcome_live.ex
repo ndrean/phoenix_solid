@@ -48,13 +48,13 @@ defmodule PhxSolidWeb.WelcomeLive do
 
     active = fn current -> [base, current === view && styled] end
 
-    display = fn view ->
+    display = fn current ->
       @nav_elts
-      |> Enum.filter(&(&1 !== view))
+      |> Enum.filter(&(&1 !== current))
       |> Enum.reduce(%JS{}, fn elt, acc ->
         acc |> JS.hide(to: elt)
       end)
-      |> JS.show(to: view)
+      |> JS.show(to: current)
     end
 
     {:noreply, assign(socket, active: active, display: display)}

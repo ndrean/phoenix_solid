@@ -1,6 +1,6 @@
 import { createResource } from "solid-js";
 import context from "./context";
-import Counter from "./counter";
+// import Counter from "./counter";
 
 // async mock
 const asyncFunction = (ctx) => (x) =>

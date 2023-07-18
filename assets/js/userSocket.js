@@ -5,4 +5,4 @@ let socket = new Socket("/socket", {
 });
 if (window.userToken) socket.connect();
 
-export { socket };
+export default socket;

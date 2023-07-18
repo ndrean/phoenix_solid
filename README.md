@@ -286,13 +286,16 @@ cd front && pnpm i phoenix
 In the SPA's "index.jsx" file (where we `render`), we instantiate the socket connection with the `Socket` object and pass along the `user_token` read from the DOM. It will be available in the query string of the "ws", hence params, and is received server-side to authenticate and thus permit the connection.
 
 ```js
+// userSocket.js
 import { Socket } from "phoenix";
 
 const socket = new Socket("/socket", {
   params: { token: window.userToken },
 });
-socket.connect();
-export { socket };
+
+if (window.userToken) socket.connect();
+
+export default socket;
 ```
 
 We also built a helper `useChannel`. It attaches a channel to the socket with a topic and returns the channel, ready to be used (`.on`, `.push`). Use it every time you need to create a channel and communicate with the backend. It has a cleaning stage in its life cycle. For example, the SPA has a navigation; when we use a page, it opens a channel for the data in this page, and when we leave this page, this channel is closed.
@@ -343,11 +346,10 @@ The connection should be fine now.
 
 ## Channels
 
-A channel is an Elixir process derived from a Genserver: it is therefore capable of emitting and receiving messages.
-A channel is uniquely identified by a string and attached to the `socket` which accepts a list of channels.
+A channel is an Elixir process derived from a Genserver: it is therefore capable of emitting and receiving messages. It is uniquely identified by a string and attached to the `socket` which accepts a list of channels. This is done in the _UserSocket_ module.
 
-- Whenever we `push` data through a channel client-side, its alter ego server-side will receive it in a callback `handle_in`.
-- we can push data from the server to the client through the socket with a `broadcast` related to a topic. The client will receive it with the listener `mychannel.on`.
+Whenever we `push` data through a channel client-side, its alter ego server-side will receive it in a callback `handle_in`.
+We can push data from the server to the client through the socket with a `broadcast` related to a topic or a `push(socket, topic, msg)`. The client will receive it with the listener `mychannel.on(topic, (resp)=>{...})`.
 
 To set up a channel, use the generator:
 
@@ -355,9 +357,13 @@ To set up a channel, use the generator:
 mix phx.gen.channel Counter
 ```
 
+We create channels per piece of UI state we want to save. For example, we count the number of times the SPA landing page is reached. We save this counter as a **singleton table** (one row). Th
+
 ## State persistence
 
-We could set up a Genserver, an Agent, an ETS table, a Redis session or use the database. If the app is distributed, most probably Redis or the database should be used.
+With "standard" SSR, the backend manages the state, and the UI is a simple rendering machine
+The SPA itself can use a state management. Since it is lost each time you deconnect, it may need to be persisted. We used a "context" pattern in the SPA.
+We could set up a Redis session or use the database. If the app is distributed, most probably Redis or the database should be used.
 
 ## Misc
 
@@ -447,18 +453,15 @@ ls /usr/share/nginx/
 
 Gist: <https://gist.github.com/mcrumm/98059439c673be7e0484589162a54a01>
 
-- check after migration
+[Migration in a release without Mix installed](https://hexdocs.pm/phoenix/releases.html#ecto-migrations-and-custom-commands): "release.ex"
 
-```bash
-mix ecto.create
-mix ecto.gen.migration create_users_table
-mix ecto.migrate
-sqlite3 phx_solid .schema
+In "application.ex", do:
+
+```elixir
+ PhxSolid.Release.migrate()
 ```
 
-- [migration in a release without Mix installed](https://hexdocs.pm/phoenix/releases.html#ecto-migrations-and-custom-commands): "release.ex"
-
-- [upserts with SQLite3](https://www.sqlite.org/lang_UPSERT.html) works when the target field has a unique constrainte (`create unique_index` in the migration):
+[Userts with SQLite3](https://www.sqlite.org/lang_UPSERT.html) works when the target field has a unique constraint (`create unique_index` in the migration):
 
 ```elixir
 Repo.insert!(

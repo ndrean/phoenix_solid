@@ -6,10 +6,10 @@ export default function useChannel(socket, topic) {
   channel
     .join()
     .receive("ok", () => {
-      console.log("Joined successfully");
+      console.log(`Joined successfully ${topic}`);
     })
     .receive("error", (resp) => {
-      console.log("Unable to join", resp);
+      console.log(`Unable to join ${topic}`, resp.reason);
     });
   onCleanup(() => {
     console.log("closing channel");

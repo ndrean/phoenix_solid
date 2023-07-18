@@ -8,6 +8,7 @@ defmodule PhxSolid.Application do
   @impl true
   def start(_type, _args) do
     PhxSolid.Release.migrate()
+    PhxSolid.Discoverer.start_link("")
 
     children = [
       PhxSolidWeb.Telemetry,

@@ -3,7 +3,7 @@ import { Router, Route, Routes, A } from "@solidjs/router";
 import BauSolidCss from "bau-solidcss";
 
 import context from "./context";
-import { active, inactive } from "./index_css.js";
+import { active, inactive } from "./indexCss.js";
 
 // import styles from "./App.module.css";
 // import "./index.css";
