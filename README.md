@@ -9,7 +9,7 @@ The SPA will commmunicate with the Phoenix node through an authenticated websock
 What are the differences between the two options?
 
 - the full page is built with `Vite` (with Esbuild and Rollup). The compilation of the fullpage code is a custom process, run via a `Task`. The embedded version is compiled with `Esbuild` via a modified `mix assets.deploy`: you set up a custom "build" version of Esbuild. Rollup is _more performant_ than Esbuild to minimize the size of the bundles.
-- to use authenticated websockets with an authneticated user, we need to [adapt the documentation](https://hexdocs.pm/phoenix/channels.html#using-token-authentication). We firstly generate a `Phoenix.Token`.
+- to use authenticated websockets with an authenticated user, we need to [adapt the documentation](https://hexdocs.pm/phoenix/channels.html#using-token-authentication). We firstly generate a `Phoenix.Token`.
   - when we use the embedded SPA, we pass this "user token" into the `conn.assigns` from a Phoenix controller and it will be available in the HTML "root.html.heex" template. It is hard coded, attached to the `window` object so Javascript is able to read it. For the backend Liveview, we pass it into a session so available in the `Phoenix.LiveView.mount/3` callback. The embedded version will be declared via a dataset `phx-hook` and rendered in a dedicated component.
   - For the fullpage version, a controller will `Plug.Conn.send_resp` the compiled "index.html" file of the SPA. In the controller, we hard code the token (available in the "conn.assigns") into this file. Then Javascript will be able to read it and use it.
 - both versions will use the `_csrf_token` for the main `Socket` websocket, renewed each time we mount a new Liveview.
@@ -140,13 +140,13 @@ We will attach an object "hook" to the `LiveSocket` (the one authenticated with 
 //app.js
 import { Socket } from "phoenix";
 
-let liveSocket = new LiveSocket("/live", Socket, {
+new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
   hooks: { SolidAppHook },
-});
+}).connect();
 ```
 
-The code of the hook:
+The code of the hook looks like:
 
 ```js
 //SolidAppHook.js
@@ -159,11 +159,11 @@ You set up a "user_socket" and authenticate it in the backend with the "user tok
 
 ## Navigation with Phoenix/Liveview
 
-Once you are authenticated via the sign-in, you are redirected to a Liveview. We set up a [tab like navigation](https://dev.to/ndrean/breadcumbs-with-phoenix-liveview-2d40) where you can choose to render the SPA in a full page or run the embedded SPA.
+Once you are authenticated via the sign-in, you are redirected to a Liveview. We set up a tab like navigation where you can choose to navigate to the SPA in a full page or display the embedded SPA. On this page, all the code for the embedded SPA is already loaded.
 
-The full page SPA will be the "built" version and be rendered by `Plug.Conn.send_resp`.
+Note that the SPA has an internal navigation. When you use it in the embedded version, you deconnect from the Liveview. The fullpage version is also deconnected from the Liveview.
 
-An `on mount` function is run on each mount of the liveview as [recommended by the doc](https://hexdocs.pm/phoenix_live_view/security-model.html#mounting-considerations).
+> An `on mount` function is run on each mount of the liveview as [recommended by the doc](https://hexdocs.pm/phoenix_live_view/security-model.html#mounting-considerations).
 
 ## **non hook** SPA
 
