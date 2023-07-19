@@ -2,6 +2,12 @@
 
 The project is to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix app. It will render two versions of an SPA: one embedded with a "hook" in a Liveview, and the other rendered in a separate page.
 
+If you use only a component, then I can be usefull to embed the Javascript into a hook. The state can be synchronized with the backend via Channels.
+
+If you have navigation within the SPA (this is the case here), then in the case of the embedded SPA, you loose your Liveview. For this reason, the best option is to run the SPA in a standalone full page.
+
+The synchronization of the SPA with the backend can be tricky and should be limited.
+
 It starts as a normal Phoenix SSR app with a login to authenticate the user. We used a simple Google One Tap login.
 
 The SPA will commmunicate with the Phoenix node through an authenticated websocket. Channels will be set up to maintain the state of the SPA as well as push or broadcast information from the backend to the SPA.
@@ -12,7 +18,6 @@ What are the differences between the two options?
 - to use authenticated websockets with an authenticated user, we need to [adapt the documentation](https://hexdocs.pm/phoenix/channels.html#using-token-authentication). We firstly generate a `Phoenix.Token`.
   - when we use the embedded SPA, we pass this "user token" into the `conn.assigns` from a Phoenix controller and it will be available in the HTML "root.html.heex" template. It is hard coded, attached to the `window` object so Javascript is able to read it. For the backend Liveview, we pass it into a session so available in the `Phoenix.LiveView.mount/3` callback. The embedded version will be declared via a dataset `phx-hook` and rendered in a dedicated component.
   - For the fullpage version, a controller will `Plug.Conn.send_resp` the compiled "index.html" file of the SPA. In the controller, we hard code the token (available in the "conn.assigns") into this file. Then Javascript will be able to read it and use it.
-- if you have navigation within the SPA (this is the case here), then in the case of the embedded SPA, you loose your Liveview. For this reason, the best option is to run the SPA in a standalone full page. Furthermore, the SPA has its own state. We use the context pattern, and put the state in it, and synchronize via the channels with the backend.
 
 ## "hooked" SPA
 
