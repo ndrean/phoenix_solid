@@ -1,15 +1,21 @@
 defmodule Mix.Tasks.Spa do
   require Logger
   use Mix.Task
-  @shortdoc "Compile and bundle frontend for production"
+  @moduledoc"""
+  Compile and bundle frontend for production. Append absolute path to the key "--path"
 
-  @spa_path System.fetch_env!("SPA_DIR")
+  ## Example
+
+      iex> mix spa --path="./priv/static/spa"
+  """
+
 
   @impl Mix.Task
-  def run(_) do
+  def run(arg) do
+    {[path: path], _,_} = OptionParser.parse_head(arg, switches: [path: :string])
     System.cmd("pnpm", ["run", "build"], cd: "./front")
-    System.cmd("rm", ["-rf", @spa_path])
-    System.cmd("cp", ["-R", "./front/dist", @spa_path])
+    System.cmd("rm", ["-rf", path])
+    System.cmd("cp", ["-R", "./front/dist", path])
     Logger.info(":ok, SPA")
   end
 end

@@ -7,12 +7,14 @@ defmodule PhxSolid.Discoverer do
   @impl true
   def init(_) do
     :net_kernel.monitor_nodes(true)
+    require Logger
+    Logger.info("Init discovery")
     {:ok, nil}
   end
 
   @impl true
   def handle_info({:nodedown, node}, _state) do
-    Logger.info("Down-----#{inspect(node)}")
+    Logger.info("Down-----: #{inspect(node)}")
     PhxSolidWeb.Endpoint.broadcast!("nodes", "up", node)
     {:noreply, nil}
   end
@@ -20,7 +22,7 @@ defmodule PhxSolid.Discoverer do
   @impl true
   def handle_info({:nodeup, node}, _state) do
     PhxSolidWeb.Endpoint.broadcast!("nodes", "down", node)
-    Logger.info("Up-----#{inspect(node)}")
+    Logger.info("Up-----: #{inspect(node)}")
     {:noreply, nil}
   end
 end

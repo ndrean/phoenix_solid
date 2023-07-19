@@ -6,7 +6,6 @@ defmodule PhxSolidWeb.Nav do
   attr :active, :any
   attr :display, :any
 
-
   def render(assigns) do
     ~H"""
     <nav class="px-4 sm:px-6 lg:px-8  bg-slate-800 text-white" id="nav">
@@ -18,15 +17,14 @@ defmodule PhxSolidWeb.Nav do
           </.link>
           <%=  %>
           <.link
-            
-          class={@active.("#solid")}
+            class={@active.("#solid")}
             phx-click={@display.("#solid")}
             patch={~p"/welcome?display=solid"}
           >
             SPA Hook
           </.link>
           <.link
-          class={@active.("#profile")}
+            class={@active.("#profile")}
             phx-click={@display.("#profile")}
             patch={~p"/welcome?display=profile"}
           >
@@ -34,7 +32,7 @@ defmodule PhxSolidWeb.Nav do
           </.link>
         </div>
         <div>
-        <.link patch={~p"/dev/dashboard"}>Dashboard</.link>
+          <.link href={~p"/dev/dashboard"}>Dashboard</.link>
         </div>
         <div class="py-3">
           <img src="/images/online.png" alt="line-status" id="online" />

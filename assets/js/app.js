@@ -14,10 +14,12 @@ const csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute("content");
 
-new LiveSocket("/live", Socket, {
+const liveSocket = new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
   hooks: { SolidAppHook },
-}).connect();
+});
+liveSocket.connect();
+
 // connect if there are any LiveViews on the page
 // expose liveSocket on window for web console debug logs and latency simulation:
 // >> liveSocket.enableDebug()

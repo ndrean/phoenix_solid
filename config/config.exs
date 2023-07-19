@@ -35,7 +35,7 @@ config :phx_solid, PhxSolidWeb.Endpoint,
   ],
   pubsub_server: PhxSolid.PubSub,
   live_view: [signing_salt: "WDPkDNzDwUG1jPxEDcag+XYKvVPEEPoZ"],
-  http: [port: 4000]
+  http: [ip: {0, 0, 0, 0}, port: 4000]
 
 # https: [
 #  port: 4001,

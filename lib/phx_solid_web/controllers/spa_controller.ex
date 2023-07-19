@@ -14,10 +14,8 @@ defmodule PhxSolidWeb.SPAController do
 
   defp index_html do
     # line below for the release
-    Application.app_dir(:phx_solid) <>
-      "/" <>
-      Application.get_env(:phx_solid, :spa_dir) <>
-      "index.html"
+    Application.app_dir(:phx_solid) <> "/" <>
+      System.get_env("SPA_DIR") <> "index.html"
   end
 
   @doc """
@@ -30,6 +28,8 @@ defmodule PhxSolidWeb.SPAController do
 
         token =
           "<script nonce='ut'>window.userToken = \"#{user_token}\"</script>\n"
+
+        Logger.info(inspect(index_html()))
 
         try do
           index_html()

@@ -5,10 +5,10 @@
   </script>
   <div
     id="g_id_onload"
-    data-client_id={System.get_env("GOOGLE_CLIENT_ID")}
+    data-client_id={assigns[:g_client_id]}
     data-context="signin"
     data-ux_mode="popup"
-    data-login_uri="/auth/one_tap"
+    data-login_uri=""
     data-nonce=""
     data-itp_support="true"
   >
@@ -27,16 +27,11 @@
   </div>
   <br />
   <script>
-    window.app_id="<%= assigns[:app_id] %>";
+    window.fb_app_id="<%= assigns[:fb_app_id] %>";
   </script>
-  <div id="fb-root"></div>
-
-  <%!-- <fb:login-button scope="public_profile,email" onlogin="getLoginStatus();">
-</fb:login-button> --%>
-
-  <div id="status"></div>
-
-  <button id="fb-btn" type="button">
-    <img width="250" alt="fb login" class="" src="/images/fb-login.png" />
-  </button>
+  <div id="fb-root">
+    <button id="fb-btn" type="button">
+      <img width="250" alt="fb login" class="" src="/images/fb-login.png" />
+    </button>
+  </div>
 </section>

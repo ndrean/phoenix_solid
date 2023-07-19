@@ -11,25 +11,31 @@
 #   - https://pkgs.org/ - resource for finding needed packages
 #   - Ex: hexpm/elixir:1.15.2-erlang-26.0.2-debian-bullseye-20230612-slim
 #
+
 ARG ELIXIR_VERSION=1.15.2
 ARG OTP_VERSION=26.0.2
 ARG DEBIAN_VERSION=bullseye-20230612-slim
+ARG NODE=20-bullseye-slim
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
+
 FROM ${BUILDER_IMAGE} as builder
 
 # install build dependencies
-RUN apt-get update -y && apt-get install -y build-essential git \
-    && apt-get clean && rm -f /var/lib/apt/lists/*_*
+RUN apt-get update -y && apt-get install -y build-essential git nodejs npm curl \
+  && apt-get clean && rm -f /var/lib/apt/lists/*_*
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+  && apt-get install -y nodejs
+RUN npm install -g pnpm
 
 # prepare build dir
 WORKDIR /app
 
 # install hex + rebar
 RUN mix local.hex --force && \
-    mix local.rebar --force
+  mix local.rebar --force
 
 # set build ENV
 ENV MIX_ENV="prod"
@@ -48,14 +54,14 @@ RUN mix deps.compile
 COPY priv priv
 
 COPY lib lib
-
 COPY assets assets
 
 # compile assets
-RUN mix assets.deploy
-
+# RUN mix assets.deploy
+RUN cd assets && pnpm install && node build.js --deploy && cd ..
+RUN mix tailwind default --minify
 # Compile the release
-RUN mix compile
+RUN mix do compile, phx.digest
 
 # Changes to config/runtime.exs don't require recompiling the code
 COPY config/runtime.exs config/

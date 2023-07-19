@@ -4,7 +4,7 @@ The project is to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix
 
 It starts as a normal Phoenix SSR app with a login to authenticate the user. We used a simple Google One Tap login.
 
-The SPA will commmunicate with the Phoenix node through an authenticated websocket. Channels will be set up to maintain the state of the SPA as well as push information from the backend to the SPA.
+The SPA will commmunicate with the Phoenix node through an authenticated websocket. Channels will be set up to maintain the state of the SPA as well as push or broadcast information from the backend to the SPA.
 
 What are the differences between the two options?
 
@@ -12,7 +12,7 @@ What are the differences between the two options?
 - to use authenticated websockets with an authenticated user, we need to [adapt the documentation](https://hexdocs.pm/phoenix/channels.html#using-token-authentication). We firstly generate a `Phoenix.Token`.
   - when we use the embedded SPA, we pass this "user token" into the `conn.assigns` from a Phoenix controller and it will be available in the HTML "root.html.heex" template. It is hard coded, attached to the `window` object so Javascript is able to read it. For the backend Liveview, we pass it into a session so available in the `Phoenix.LiveView.mount/3` callback. The embedded version will be declared via a dataset `phx-hook` and rendered in a dedicated component.
   - For the fullpage version, a controller will `Plug.Conn.send_resp` the compiled "index.html" file of the SPA. In the controller, we hard code the token (available in the "conn.assigns") into this file. Then Javascript will be able to read it and use it.
-- both versions will use the `_csrf_token` for the main `Socket` websocket, renewed each time we mount a new Liveview.
+- if you have navigation within the SPA (this is the case here), then in the case of the embedded SPA, you loose your Liveview. For this reason, the best option is to run the SPA in a standalone full page. Furthermore, the SPA has its own state. We use the context pattern, and put the state in it, and synchronize via the channels with the backend.
 
 ## "hooked" SPA
 
@@ -134,16 +134,18 @@ def display(assigns) do
 end
 ```
 
-We will attach an object "hook" to the `LiveSocket` (the one authenticated with the `_csrf_token`).
+We attach to the property "hooks" of the `LiveSocket` (the one authenticated with the `_csrf_token`) the function that renders the SPA.
 
 ```js
 //app.js
 import { Socket } from "phoenix";
+import { SolidAppHook } from "./solidAppHook';
 
 new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
-  hooks: { SolidAppHook },
+  hooks: { SolidAppHook }
 }).connect();
+
 ```
 
 The code of the hook looks like:
@@ -221,10 +223,10 @@ export default defineConfig({
 
 ### Build the rendered SPA
 
-We will compile the "front" files and copy them into the folder "priv/static/spa". We set up a [mix task](https://hexdocs.pm/mix/Mix.html) for this.
+We will compile the "front" files and copy them into the folder "priv/static/spa". We set up a [mix task](https://hexdocs.pm/mix/Mix.html) for this. Run this before anything.
 
 ```bash
-mix spa
+mix spa --path="./priv/static/spa"
 ```
 
 ### Render the "non-hook" SPA
@@ -236,7 +238,7 @@ Note that the file path is defined by the function below. We need to add `Applic
 ```elixir
 defp index_html do
   Application.app_dir(:phx_solid) <> "/" <>
-  Application.get_env(:phx_solid, :spa_dir)
+  System.get_env(:phx_solid, :spa_dir)
   <>  "index.html"
 end
 ```
@@ -349,7 +351,7 @@ The connection should be fine now.
 A channel is an Elixir process derived from a Genserver: it is therefore capable of emitting and receiving messages. It is uniquely identified by a string and attached to the `socket` which accepts a list of channels. This is done in the _UserSocket_ module.
 
 Whenever we `push` data through a channel client-side, its alter ego server-side will receive it in a callback `handle_in`.
-We can push data from the server to the client through the socket with a `broadcast` related to a topic or a `push(socket, topic, msg)`. The client will receive it with the listener `mychannel.on(topic, (resp)=>{...})`.
+We can push data from the server to the client through the socket with a `broadcast!(topci, event, message)` or `push` related to a topic. The client will receive it with the listener `channel_topic.on(event, (resp)=>{...})`.
 
 To set up a channel, use the generator:
 
@@ -358,6 +360,15 @@ mix phx.gen.channel Counter
 ```
 
 We create channels per piece of UI state we want to save. For example, we count the number of times the SPA landing page is reached. We save this counter as a **singleton table** (one row). Th
+
+## Docker
+
+We need to install `nodejs` and `npm`, or rather `pnpm` as (curiously??) NPM didn't accept "link:../deps/phoenix..".
+
+```bash
+docker build -t phxsolid .
+docker run --rm -it -p 4000:4000 --name web --env-file .env-docker phxsolid
+```
 
 ## State persistence
 
