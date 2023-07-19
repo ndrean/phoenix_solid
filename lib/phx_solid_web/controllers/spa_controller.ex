@@ -14,7 +14,7 @@ defmodule PhxSolidWeb.SPAController do
 
   defp index_html do
     # line below for the release
-    Application.app_dir(:phx_solid) <> "/" <>
+    Application.app_dir(:phx_solid) <>
       System.get_env("SPA_DIR") <> "index.html"
   end
 

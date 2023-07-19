@@ -1,6 +1,7 @@
 defmodule PhxSolidWeb.CounterChannel do
   use PhxSolidWeb, :channel
   alias PhxSolid.Counter
+  @moduledoc false
 
   @impl true
   def join("counter:visits", _payload, socket) do

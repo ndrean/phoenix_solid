@@ -18,14 +18,16 @@ defmodule PhxSolid.Counter do
   def update() do
     {:ok, %{count: count}} =
       case Repo.one(Counter) do
-        nil -> {%Counter{}, 0}
-        c -> {c, c.count}
+        nil ->
+          %Counter{}
+          |> changeset(%{count: 1})
+          |> Repo.insert_or_update()
+
+        counter ->
+          counter
+          |> changeset(%{count: counter.count + 1})
+          |> Repo.insert_or_update()
       end
-      |> then(fn {count, val} ->
-        count
-        |> changeset(%{count: val + 1})
-        |> Repo.insert_or_update()
-      end)
 
     count
   end

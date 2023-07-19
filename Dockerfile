@@ -15,7 +15,7 @@
 ARG ELIXIR_VERSION=1.15.2
 ARG OTP_VERSION=26.0.2
 ARG DEBIAN_VERSION=bullseye-20230612-slim
-ARG NODE=20-bullseye-slim
+# ARG NODE=20-bullseye-slim
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
@@ -26,7 +26,7 @@ FROM ${BUILDER_IMAGE} as builder
 # install build dependencies
 RUN apt-get update -y && apt-get install -y build-essential git nodejs npm curl \
   && apt-get clean && rm -f /var/lib/apt/lists/*_*
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x bullseye| bash - \
   && apt-get install -y nodejs
 RUN npm install -g pnpm
 

@@ -8,7 +8,6 @@ defmodule PhxSolid.Application do
   @impl true
   def start(_type, _args) do
     PhxSolid.Release.migrate()
-    PhxSolid.Discoverer.start_link("")
 
     children = [
       PhxSolidWeb.Telemetry,
@@ -19,7 +18,8 @@ defmodule PhxSolid.Application do
       # Start Finch
       {Finch, name: PhxSolid.Finch},
       # Start the Endpoint (http/https)
-      PhxSolidWeb.Endpoint
+      PhxSolidWeb.Endpoint,
+      PhxSolid.Observer
       # Start a worker by calling: PhxSolid.Worker.start_link(arg)
       # {PhxSolid.Worker, arg}
     ]

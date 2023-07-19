@@ -36,10 +36,11 @@ phx_solid-*.tar
 # In case you use Node.js/npm, you want to ignore these.
 npm-debug.log
 /assets/node_modules/
-
+/rel/
 /db/
 .credo*
 phx_solid_dev
 phx_solid_dev-*
 /priv/cert
 .env-*
+.dockerignore

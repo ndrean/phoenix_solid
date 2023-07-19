@@ -1,12 +1,13 @@
 # PhxSolid
 
-The project is to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix app. It will render two versions of an SPA: one embedded with a "hook" in a Liveview, and the other rendered in a separate page.
+The project is to made to describe how to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix app. It will render two versions of an SPA:
 
-If you use only a component, then I can be usefull to embed the Javascript into a hook. The state can be synchronized with the backend via Channels.
+- one embedded with a "hook" in a Liveview,
+- one rendered in a separate page.
 
-If you have navigation within the SPA (this is the case here), then in the case of the embedded SPA, you loose your Liveview. For this reason, the best option is to run the SPA in a standalone full page.
+If you use only a component, then I can be usefull to embed the Javascript into a hook. If you have navigation within the SPA (this is the case here), then in the case of the embedded SPA, you loose your Liveview. For this reason, the best option is to run the SPA in a standalone full page.
 
-The synchronization of the SPA with the backend can be tricky and should be limited.
+The synchronization of the state of SPA with the backend can be tricky and should be limited.
 
 It starts as a normal Phoenix SSR app with a login to authenticate the user. We used a simple Google One Tap login.
 

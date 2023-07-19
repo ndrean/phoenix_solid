@@ -1,6 +1,10 @@
-defmodule PhxSolid.Discoverer do
+defmodule PhxSolid.Observer do
   use GenServer
   require Logger
+
+  @moduledoc """
+  Monitor the connected nodes
+  """
 
   def start_link(_), do: GenServer.start_link(__MODULE__, {}, name: __MODULE__)
 
@@ -8,7 +12,7 @@ defmodule PhxSolid.Discoverer do
   def init(_) do
     :net_kernel.monitor_nodes(true)
     require Logger
-    Logger.info("Init discovery")
+    Logger.info("Init observer")
     {:ok, nil}
   end
 
