@@ -52,6 +52,7 @@ defmodule PhxSolid.MixProject do
       {:jason, "~> 1.4"},
       {:joken, "~> 2.5"},
       {:plug_cowboy, "~> 2.5"},
+      {:libcluster, "~> 3.3.3"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:sobelow, "~> 0.11.1", only: [:dev]}

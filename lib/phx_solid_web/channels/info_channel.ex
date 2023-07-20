@@ -18,6 +18,7 @@ defmodule PhxSolidWeb.InfoChannel do
     process_info =
       %{
         curr_node: node(),
+        cookie: Node.get_cookie(),
         user: socket.assigns.name,
         connected_nodes: Node.list(),
         memory: div(:erlang.memory(:total), 1_000_000)
@@ -29,14 +30,14 @@ defmodule PhxSolidWeb.InfoChannel do
   end
 
   @impl true
-  def handle_info(%{"topic" => "nodes", "event" => "down", payload: node}, socket) do
+  def handle_info(%{topic: "nodes", event: "down", payload: node}, socket) do
     Logger.debug("#{inspect(node)} down")
     broadcast!(socket, "nodes_event", %{down: node})
     {:noreply, socket}
   end
 
   @impl true
-  def handle_info(%{"topic" => "nodes", "event" => "up", payload: node}, socket) do
+  def handle_info(%{topic: "nodes", event: "up", payload: node}, socket) do
     Logger.debug("#{inspect(node)} up")
     broadcast!(socket, "nodes_event", %{up: node})
     {:noreply, socket}

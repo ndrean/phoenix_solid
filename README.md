@@ -7,9 +7,9 @@ The project is to made to describe how to include a [SolidJS](https://www.solidj
 
 If you use only a component, then I can be usefull to embed the Javascript into a hook. If you have navigation within the SPA (this is the case here), then in the case of the embedded SPA, you loose your Liveview. For this reason, the best option is to run the SPA in a standalone full page.
 
-The synchronization of the state of SPA with the backend can be tricky and should be limited.
+The ideal is to have stateless apps, the front and the back. We may use synchronization of the state of SPA with the backend for some bits of state. We used the context pattern in the SPA, and the relevant state of the backend is stored in a database, SQLite.
 
-It starts as a normal Phoenix SSR app with a login to authenticate the user. We used a simple Google One Tap login.
+It starts as a normal Phoenix SSR app with a login to authenticate the user. We used a Google One Tap login, a Facebook login and a Magic link login.
 
 The SPA will commmunicate with the Phoenix node through an authenticated websocket. Channels will be set up to maintain the state of the SPA as well as push or broadcast information from the backend to the SPA.
 
@@ -352,12 +352,12 @@ We used `App.Endpoint` since `conn` is not available.
 
 The connection should be fine now.
 
-## Channels
+### Channels
 
 A channel is an Elixir process derived from a Genserver: it is therefore capable of emitting and receiving messages. It is uniquely identified by a string and attached to the `socket` which accepts a list of channels. This is done in the _UserSocket_ module.
 
 Whenever we `push` data through a channel client-side, its alter ego server-side will receive it in a callback `handle_in`.
-We can push data from the server to the client through the socket with a `broadcast!(topci, event, message)` or `push` related to a topic. The client will receive it with the listener `channel_topic.on(event, (resp)=>{...})`.
+We can push data from the server to the client through the socket with a `broadcast!(topic, event, message)` or `push` related to a topic. The client will receive it with the listener `channel_topic.on(event, (resp)=>{...})`.
 
 To set up a channel, use the generator:
 
@@ -369,12 +369,34 @@ We create channels per piece of UI state we want to save. For example, we count 
 
 ## Docker
 
-We need to install `nodejs` and `npm`, or rather `pnpm` as (curiously??) NPM didn't accept "link:../deps/phoenix..".
+It is a 3 stage process:
+
+- build the fullpage SPA. You can build "by hand" `mix spa --path="./priv/static/spa"` or use Docker to build it in the first stage.
+- prebuild PHoenix and its assets, and a release
+- deliver minimal image
+
+We need to install `nodejs` and `npm`, then `pnpm` as (curiously???) NPM didn't accept "link:../deps/phoenix..".
 
 ```bash
-docker build -t phxsolid .
-docker run --rm -it -p 4000:4000 --name web --env-file .env-docker phxsolid
+docker build -t phxsolid . && \\
+docker network create mynet && \\
+docker run --rm -it -p 4000:4000 --name web --network mynet --env-file .env-docker --env RELEASE_NODE="a@test:mynet" phxsolid
 ```
+
+To sneak inside:
+
+```bash
+docker exec -it web bin/phx_solid remote
+> node()
+```
+
+In another terminal:
+
+```bash
+docker run --rm -it -p 4001:4000 --name web1 --network mynet --env-file .env-docker phxsolid
+```
+
+Use `Base.url_encode64(:crypto.strong_rand_bytes(40))` to populate the env variable `RELEASE_COOKIE`.
 
 ## State persistence
 

@@ -7,6 +7,13 @@
 # General application configuration
 import Config
 
+config :libcluster,
+  topologies: [
+    local_epmd: [
+      strategy: Elixir.Cluster.Strategy.LocalEpmd
+    ]
+  ]
+
 config :phx_solid,
   google_client_id: System.get_env("GOOGLE_CLIENT_ID"),
   google_client_secret: System.get_env("GOOGLE_CLIENT_SECRET"),

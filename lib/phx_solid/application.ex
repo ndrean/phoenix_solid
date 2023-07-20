@@ -9,19 +9,27 @@ defmodule PhxSolid.Application do
   def start(_type, _args) do
     PhxSolid.Release.migrate()
 
+    # topologies = Application.get_env(:libcluster, :topologies)
+    topologies = [gossip: [strategy: Cluster.Strategy.Gossip]]
+    # topologies = [
+    #   example: [
+    #     strategy: Cluster.Strategy.Epmd,
+    #     config: [hosts: [:"a@127.0.0.1", :"b@127.0.0.1"]]
+    #   ]
+    # ]
+
     children = [
       PhxSolidWeb.Telemetry,
       # Start the Ecto repository
       PhxSolid.Repo,
       # Start the PubSub system
-      {Phoenix.PubSub, name: PhxSolid.PubSub},
+      {Phoenix.PubSub, name: PhxSolid.PubSub, adapter: Phoenix.PubSub.PG2},
       # Start Finch
       {Finch, name: PhxSolid.Finch},
       # Start the Endpoint (http/https)
       PhxSolidWeb.Endpoint,
-      PhxSolid.Observer
-      # Start a worker by calling: PhxSolid.Worker.start_link(arg)
-      # {PhxSolid.Worker, arg}
+      PhxSolid.Observer,
+      {Cluster.Supervisor, [topologies, [name: PhxSolid.ClusterSupervisor]]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

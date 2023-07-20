@@ -18,15 +18,13 @@ defmodule PhxSolid.Observer do
 
   @impl true
   def handle_info({:nodedown, node}, _state) do
-    Logger.info("Down-----: #{inspect(node)}")
-    PhxSolidWeb.Endpoint.broadcast!("nodes", "up", node)
+    PhxSolidWeb.Endpoint.broadcast!("nodes", "down", node)
     {:noreply, nil}
   end
 
   @impl true
   def handle_info({:nodeup, node}, _state) do
-    PhxSolidWeb.Endpoint.broadcast!("nodes", "down", node)
-    Logger.info("Up-----: #{inspect(node)}")
+    PhxSolidWeb.Endpoint.broadcast!("nodes", "up", node)
     {:noreply, nil}
   end
 end

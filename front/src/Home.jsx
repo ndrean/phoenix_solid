@@ -40,6 +40,7 @@ export default function Home() {
         <p>Memory usage: {info().memory} Mo</p>
         <br />
         <p>Current node: {info().curr_node}</p>
+        <p>Cookie: {info().cookie}</p>
         <p>Node event: {nodeEvt()}</p>
         <p>Connected nodes: {info().connected_nodes}</p>
       </header>
