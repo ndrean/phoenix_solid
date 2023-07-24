@@ -9,7 +9,12 @@ defmodule PhxSolid.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      releases: [
+        phx_solid: [
+          applications: [runtime_tools: :permanent]
+        ]
+      ]
     ]
   end
 
@@ -32,19 +37,17 @@ defmodule PhxSolid.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:bcrypt_elixir, "~> 3.0"},
       {:phoenix, "~> 1.7.6"},
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.6"},
-      {:postgrex, ">= 0.0.0"},
-      {:ecto_sqlite3, "~> 0.10.3"},
+      # {:ecto_sqlite3, "~> 0.10.3"},
+      {:postgrex, "~> 0.17.2"},
       {:phoenix_html, "~> 3.3"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.18.16"},
-      {:floki, ">= 0.30.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.7.2"},
-      {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
-      # {:swoosh, "~> 1.3"},
+      {:swoosh, "~> 1.11"},
+      {:hackney, "~> 1.9"},
       {:finch, "~> 0.16"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
@@ -53,9 +56,13 @@ defmodule PhxSolid.MixProject do
       {:joken, "~> 2.5"},
       {:plug_cowboy, "~> 2.5"},
       {:libcluster, "~> 3.3.3"},
+      {:phoenix_live_reload, "~> 1.2", only: :dev},
+      {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
+      {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
+      {:sobelow, "~> 0.11.1", only: [:dev]},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
-      {:sobelow, "~> 0.11.1", only: [:dev]}
+      {:floki, ">= 0.30.0", only: :test},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
     ]
   end
 

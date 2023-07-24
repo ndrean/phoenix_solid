@@ -2,7 +2,7 @@ defmodule PhxSolid.Repo.Migrations.CreateCounterTable do
   use Ecto.Migration
 
   def change do
-    create table(:counter) do
+    create_if_not_exists table("counter") do
       add(:count, :integer)
       timestamps()
     end

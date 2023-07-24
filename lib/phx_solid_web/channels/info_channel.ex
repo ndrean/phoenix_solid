@@ -15,31 +15,32 @@ defmodule PhxSolidWeb.InfoChannel do
 
   @impl true
   def handle_info(:join_info, socket) do
-    process_info =
-      %{
-        curr_node: node(),
-        cookie: Node.get_cookie(),
-        user: socket.assigns.name,
-        connected_nodes: Node.list(),
-        memory: div(:erlang.memory(:total), 1_000_000)
-      }
-
-    broadcast!(socket, "get_info", process_info)
-    # push(socket, "get_info", process_info)
+    # broadcast!(socket, "get_info", get_info(socket.assigns.name))
+    push(socket, "get_info", get_info(socket.assigns.name))
     {:noreply, socket}
   end
 
   @impl true
   def handle_info(%{topic: "nodes", event: "down", payload: node}, socket) do
-    Logger.debug("#{inspect(node)} down")
-    broadcast!(socket, "nodes_event", %{down: node})
+    # broadcast!(socket, "get_info", get_info(socket.assigns.name))
+    broadcast!(socket, "nodes_event", %{down: node, list: Node.list(:connected)})
     {:noreply, socket}
   end
 
   @impl true
   def handle_info(%{topic: "nodes", event: "up", payload: node}, socket) do
-    Logger.debug("#{inspect(node)} up")
-    broadcast!(socket, "nodes_event", %{up: node})
+    # broadcast!(socket, "get_info", get_info(socket.assigns.name))
+    broadcast!(socket, "nodes_event", %{up: node, list: Node.list(:connected)})
     {:noreply, socket}
+  end
+
+  defp get_info(name) do
+    %{
+      curr_node: node(),
+      cookie: Node.get_cookie(),
+      user: name,
+      connected_nodes: Node.list(:connected),
+      memory: div(:erlang.memory(:total), 1_000_000)
+    }
   end
 end

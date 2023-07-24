@@ -16,6 +16,7 @@
 
 
 ########
+ARG BUILD_ENV=prod
 ARG SPA_DIR="assets/spa"
 ARG ELIXIR_VERSION=1.15.2
 ARG OTP_VERSION=26.0.2
@@ -34,7 +35,7 @@ RUN pnpm install
 
 ##### build stage of fullpage SPA: assets are build in /front/dist folder
 FROM node-deps as asset-builder
-ENV NODE_ENV prod
+ENV NODE_ENV=${BUILD_ENV}
 WORKDIR /front
 COPY front .
 RUN pnpm build
@@ -44,7 +45,7 @@ RUN pnpm prune --prod
 #####--> Phoenix build stage
 # install node, npm and pnpm to build assets and compile Taliwind
 FROM ${BUILDER_IMAGE} as builder
-
+ARG BUILD_ENV=prod
 # install build dependencies
 RUN apt-get update -y && apt-get install -y build-essential git nodejs npm curl \
   && apt-get clean && rm -f /var/lib/apt/lists/*_*
@@ -61,7 +62,7 @@ RUN mix local.hex --force && \
   mix local.rebar --force
 
 # set build ENV
-ENV MIX_ENV="prod"
+ENV MIX_ENV ${BUILD_ENV}
 
 # install mix dependencies
 COPY mix.exs mix.lock ./
@@ -83,7 +84,7 @@ COPY assets assets
 
 # compile assets
 # RUN mix assets.deploy
-ENV NODE_ENV prod
+ENV NODE_ENV ${BUILD_ENV}
 RUN  cd assets && pnpm install && node build.js --deploy
 
 WORKDIR /app
@@ -102,7 +103,8 @@ RUN mix release && rm -rf /app/deps
 # the compiled release and other runtime necessities
 FROM ${RUNNER_IMAGE}
 
-RUN apt-get update -y && apt-get install -y libstdc++6 openssl libncurses5 locales \
+ARG BUILD_ENV=prod
+RUN apt-get update -y && apt-get install -y libstdc++6 openssl libncurses5 locales\
   && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # Set the locale
@@ -111,16 +113,20 @@ RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
+ENV RELEASE_DISTRIBUTION="name"
 
 WORKDIR "/app"
 RUN chown nobody /app
-EXPOSE 4369
+
 # set runner ENV
-ENV MIX_ENV="prod"
+ENV MIX_ENV ${BUILD_ENV}
 
 # Only copy the final release from the build stage
 COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/phx_solid ./
 
 USER nobody
+EXPOSE 4000
 
-CMD ["/app/bin/server"]
+ENTRYPOINT ["/app/bin/phx_solid"]
+# CMD is overwrittable
+CMD ["start"]

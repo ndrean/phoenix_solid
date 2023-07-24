@@ -19,6 +19,15 @@ defmodule PhxSolidWeb.CoreComponents do
   alias Phoenix.LiveView.JS
   import PhxSolidWeb.Gettext
 
+  attr :name, :string
+  attr :content, :string
+
+  def meta(assigns) do
+    ~H"""
+    <meta name={@name} content={@content} />
+    """
+  end
+
   @doc """
   Renders a modal.
 

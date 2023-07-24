@@ -34,8 +34,8 @@ defmodule PhxSolidWeb.UserSocket do
   defp verify(_socket, token) do
     case PhxSolid.Token.user_check(token) do
       {:ok, email} ->
-        case PhxSolid.User.check(:email, email, :id) do
-          {:ok, user} -> {:ok, user}
+        case PhxSolid.SocialUser.check(:email, email, :id) do
+          {:ok, social_user} -> {:ok, social_user}
           {:error, reason} -> {:error, reason}
         end
 

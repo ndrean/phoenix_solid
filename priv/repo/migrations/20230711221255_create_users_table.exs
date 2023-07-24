@@ -1,8 +1,8 @@
-defmodule PhxSolid.Repo.Migrations.CreateUsersTable do
+defmodule PhxSolid.Repo.Migrations.CreateSocialUsersTable do
   use Ecto.Migration
 
   def change do
-    create table(:users) do
+    create_if_not_exists table("social_users") do
       add :email, :string
       add :name, :string
       add :logs, :integer, default: 1
@@ -11,6 +11,6 @@ defmodule PhxSolid.Repo.Migrations.CreateUsersTable do
       timestamps()
     end
 
-    create unique_index("users", [:email])
+    create unique_index("social_users", [:email])
   end
 end

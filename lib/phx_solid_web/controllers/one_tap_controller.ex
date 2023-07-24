@@ -1,6 +1,7 @@
 defmodule PhxSolidWeb.OneTapController do
   use PhxSolidWeb, :controller
   action_fallback PhxSolidWeb.LoginErrorController
+  alias PhxSolid.SocialUser
   require Logger
 
   def handle(conn, %{"credential" => jwt, "g_csrf_token" => g_csrf_token}) do
@@ -8,7 +9,7 @@ defmodule PhxSolidWeb.OneTapController do
            ElixirGoogleCerts.verified_identity(conn, jwt, g_csrf_token, PhxSolid.Finch) do
       token = PhxSolid.Token.user_generate(email)
 
-      case PhxSolid.User.create(%{email: email, name: name}) do
+      case SocialUser.create(%{email: email, name: name}) do
         {:error, errors} ->
           conn
           |> fetch_session()
@@ -17,7 +18,7 @@ defmodule PhxSolidWeb.OneTapController do
           |> redirect(to: ~p"/")
 
         {:ok, user} ->
-          {:ok, u} = PhxSolid.User.update_token(%{id: user.id, user_token: token})
+          {:ok, u} = SocialUser.update_token(%{id: user.id, user_token: token})
 
           conn
           |> fetch_session()
@@ -30,5 +31,3 @@ defmodule PhxSolidWeb.OneTapController do
     end
   end
 end
-
-# PhxSolid.Repo.get_by!(PhxSolid.User, name: "Neven DREAN")

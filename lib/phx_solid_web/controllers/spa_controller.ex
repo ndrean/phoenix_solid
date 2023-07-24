@@ -29,7 +29,7 @@ defmodule PhxSolidWeb.SPAController do
         token =
           "<script nonce='ut'>window.userToken = \"#{user_token}\"</script>\n"
 
-        Logger.info(inspect(index_html()))
+        Logger.info("------------------->>> #{inspect(PhxSolidWeb.Endpoint.url())}")
 
         try do
           index_html()

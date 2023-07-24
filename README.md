@@ -9,7 +9,7 @@ If you use only a component, then I can be usefull to embed the Javascript into 
 
 The ideal is to have stateless apps, the front and the back. We may use synchronization of the state of SPA with the backend for some bits of state. We used the context pattern in the SPA, and the relevant state of the backend is stored in a database, SQLite.
 
-It starts as a normal Phoenix SSR app with a login to authenticate the user. We used a Google One Tap login, a Facebook login and a Magic link login.
+It starts as a normal Phoenix SSR app with a login to authenticate the user. We used a Google One Tap login, a Facebook login and a Magic link login <https://johnelmlabs.com/posts/magic-link-auth>
 
 The SPA will commmunicate with the Phoenix node through an authenticated websocket. Channels will be set up to maintain the state of the SPA as well as push or broadcast information from the backend to the SPA.
 
@@ -56,6 +56,7 @@ if (deploy) {
     minify: true,
     splitting: true,
   };
+  build(opts);
 }
 
 if (watch) {
@@ -71,8 +72,6 @@ if (watch) {
     .catch((_error) => {
       process.exit(1);
     });
-} else {
-  build(opts);
 }
 ```
 
@@ -369,31 +368,38 @@ We create channels per piece of UI state we want to save. For example, we count 
 
 ## Docker
 
-It is a 3 stage process:
+It is a 3 stage process with Debian based images:
 
-- build the fullpage SPA. You can build "by hand" `mix spa --path="./priv/static/spa"` or use Docker to build it in the first stage.
-- prebuild PHoenix and its assets, and a release
-- deliver minimal image
+- build the fullpage SPA based on a NodeJS image. You can build "by hand" `mix spa --path="./priv/static/spa"` or use Docker to build it in the first stage. The stage is differenciated in order not to rebuild all if a change is made in this one and not the "hooked" one.
+- prebuild Phoenix and its assets, based on Elixir with NodeJS injected, and produce a release
+- deliver a minimal Debian based image
 
 We need to install `nodejs` and `npm`, then `pnpm` as (curiously???) NPM didn't accept "link:../deps/phoenix..".
 
 ```bash
-docker build -t phxsolid . && \\
-docker network create mynet && \\
-docker run --rm -it -p 4000:4000 --name web --network mynet --env-file .env-docker --env RELEASE_NODE="a@test:mynet" phxsolid
+docker-compose build
+docker-compose up
 ```
 
-To sneak inside:
+In the Livebook:
 
-```bash
-docker exec -it web bin/phx_solid remote
-> node()
+```elixir
+topologies = [gossip: [strategy: Cluster.Strategy.Gossip]]
+
+children = [
+  {Phoenix.PubSub, name: PhxSolid.PubSub},
+  {Cluster.Supervisor, [topologies, [name: PhxSolid.ClusterSupervisor]]}
+]
+
+opts = [strategy: :one_for_one, name: PhxSolid.Supervisor]
+Supervisor.start_link(children, opts)
 ```
 
-In another terminal:
+You can check:
 
-```bash
-docker run --rm -it -p 4001:4000 --name web1 --network mynet --env-file .env-docker phxsolid
+```elixir
+Node.list(:connected)
+:rpc.call(:"phx_solid@app0.mynet", PhxSolid.Repo, :get_by, [PhxSolid.SocialUser, %{id: 1}])
 ```
 
 Use `Base.url_encode64(:crypto.strong_rand_bytes(40))` to populate the env variable `RELEASE_COOKIE`.
@@ -488,9 +494,15 @@ docker exec -it web bash
 ls /usr/share/nginx/
 ```
 
+### Notes Postgresql / Docker
+
+To create a database, it is sufficient to use the env variables PSOTGRES_USER, POSTGRES_PASSWORD and POSTGRES_DB to the Postgres container: this will create the database. To run the migration, use a `/docker-entrypoint-initdb.d/init.sql` entry.
+
 ### Notes on SQLITE
 
 Gist: <https://gist.github.com/mcrumm/98059439c673be7e0484589162a54a01>
+
+Litestream: <https://litestream.io/>. Stream the db.
 
 [Migration in a release without Mix installed](https://hexdocs.pm/phoenix/releases.html#ecto-migrations-and-custom-commands): "release.ex"
 
@@ -511,6 +523,15 @@ Repo.insert!(
     set: [updated_at: DateTime.utc_now()]
   ]
 )
+```
+
+[Sqlite3 CLI](https://www.sqlite.org/cli.html) (dot notation):
+
+```bash
+~/phx_solid/db> .open phx_solid.db
+sqlite> .mode tabs
+sqlite> select * from social_users;
+sqlite .quit
 ```
 
 ### CSS Typewritter

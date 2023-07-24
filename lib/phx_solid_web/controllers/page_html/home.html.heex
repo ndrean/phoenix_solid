@@ -1,5 +1,46 @@
-<section class="bg-no-repeat bg-contain" style="background-image: url('/images/rendering.png')">
-  <h1>Google LOGIN</h1>
+<%!-- style="background-image: url('/images/rendering.png')" --%>
+<section class="bg-no-repeat bg-contain">
+  <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-start">
+    <%= if @current_user do %>
+      <li class="text-[0.8125rem] leading-6 text-zinc-900 border-1 rounded-3xl bg-{2473f2} text-white font-bold">
+        <%= @current_user.email %>
+      </li>
+      <li>
+        <.link
+          href={~p"/users/settings"}
+          class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+        >
+          Settings
+        </.link>
+      </li>
+      <li>
+        <.link
+          href={~p"/users/log_out"}
+          method="delete"
+          class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+        >
+          Log out
+        </.link>
+      </li>
+    <% else %>
+      <li>
+        <.link
+          href={~p"/users/register"}
+          class="text-[0.8125rem] leading-6  hover:text-zinc-700 border-1 p-2 text-base rounded-3xl bg-blue-500 text-white font-bold"
+        >
+          Register
+        </.link>
+      </li>
+      <li>
+        <.link
+          href={~p"/users/log_in"}
+          class="text-[0.8125rem] leading-6  hover:text-zinc-700 border-1 p-2 text-base rounded-3xl bg-blue-500 text-white font-bold"
+        >
+          Log in
+        </.link>
+      </li>
+    <% end %>
+  </ul>
   <br />
   <script src="https://accounts.google.com/gsi/client" async defer>
   </script>

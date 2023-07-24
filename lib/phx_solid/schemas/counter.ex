@@ -3,7 +3,7 @@ defmodule PhxSolid.Counter do
   alias PhxSolid.{Repo, Counter}
 
   @moduledoc """
-  Ecto wrapper for "users"
+  Ecto wrapper for the singleton table "counter"
   """
 
   schema "counter" do
@@ -30,9 +30,5 @@ defmodule PhxSolid.Counter do
       end
 
     count
-  end
-
-  def get() do
-    Repo
   end
 end
