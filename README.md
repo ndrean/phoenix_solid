@@ -1,6 +1,6 @@
 # PhxSolid
 
-This project demonstrates a way to run clustered containers of a Phoenix web app with a SPA embedded, backed by a PostgreSQL database and connected to a Livebook node to monitor the web app nodes. It also describes how you can set up authenticated websockets to share information or state between the Phoenix backend and the SPA. For example, we see below some info on the backend, such as nodes events and clustered nodes. These are "real-time" information passed to the SPA.
+This project demonstrates a way to run clustered containers of a Phoenix web app with a SPA embedded, backed by a PostgreSQL database and connected to a Livebook node to monitor the web app nodes. It also describes how you can set up authenticated websockets to share information or state between the Phoenix backend and the SPA. For example, we see below some info on the backend, such as nodes events and clustered nodes. These are "real-time" information passed to the SPA via the socket connection.
 
 <img width="478" alt="Screenshot 2023-07-25 at 17 03 43" src="https://github.com/ndrean/phoenix_solid/assets/6793008/ad0998dd-b608-42ae-b228-ae37e508d6a4">
 
