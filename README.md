@@ -1,10 +1,10 @@
 # PhxSolid
 
-This project demonstrates a way to run clustered containers of a Phoenix web app with a SPA embedded, backed by a PostgreSQL database and connected to a Livebook node to monitor the web app nodes.
+This project demonstrates a way to run clustered containers of a Phoenix web app with a SPA embedded, backed by a PostgreSQL database and connected to a Livebook node to monitor the web app nodes. It also describes how you can set up authenticated websockets to share information or state between the Phoenix backend and the SPA.
 
 <img width="478" alt="Screenshot 2023-07-25 at 17 03 43" src="https://github.com/ndrean/phoenix_solid/assets/6793008/ad0998dd-b608-42ae-b228-ae37e508d6a4">
 
-The project describes recipes of how to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix app in two ways:
+The project describes recipes of how to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix app  in two ways:
 
 - embedded with a "hook" in a Liveview,
 - or rendered on a separate page.
@@ -13,8 +13,6 @@ Why would you do this? Many apps are developed as hybrid web apps: a SPA communi
 Why `SolidJS`? It is used because it is lightweight, doesn't use a VDOM and is almost as fast as Vanilla Javascript when compared to say `React`.
 
 If you don't have navigation within the SPA, it can be useful to embed the Javascript into a hook. If you have navigation within the SPA (this is the case here), then you lose your Liveview connection.
-
-To communicate with the Phoenix app, you need authenticated websocket. An authentication is proposed (Google One Tap, using a Magic link login <https://johnelmlabs.com/posts/magic-link-auth> or anonymous account)
 
 What are the differences between the two options?
 
@@ -28,6 +26,8 @@ From the app, you can navigate to the LiveDashboard.
 You can connect to a Livebook. You can connect to the database as the cluster shares the same Docker network. This enables you not to open the Postgres database.
 
 <img width="626" alt="Screenshot 2023-07-25 at 17 02 24" src="https://github.com/ndrean/phoenix_solid/assets/6793008/1e3b896c-c85e-42cf-abff-c612616e78de">
+
+To communicate with the Phoenix app, you need authenticated websocket. An authentication is proposed (Google One Tap, using a Magic link login <https://johnelmlabs.com/posts/magic-link-auth> or anonymous account).
 
 <details><summary>Authenticate websockets</summary>
 We first generate a `Phoenix.Token`. When we use the embedded SPA, we pass this "user token" into the `conn.assigns` from a Phoenix controller and it will be available in the HTML "root.html.heex" template. It is hard coded, attached to the `window` object so Javascript is able to read it. For the backend Liveview, we pass it into a session so available in the `Phoenix.LiveView.mount/3` callback. The embedded version will be declared via a dataset `phx-hook` and rendered in a dedicated component. For the fullpage version, a controller will `Plug.Conn.send_resp` the compiled "index.html" file of the SPA. In the controller, we hard code the token (available in the "conn.assigns") into this file. Then Javascript will be able to read it and use it.
