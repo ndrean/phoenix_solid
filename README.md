@@ -11,6 +11,7 @@ The project describes recipes of how to include a [SolidJS](https://www.solidjs.
 
 Why would you do this? Many apps are developed as hybrid web apps: a SPA communicating with a backend.
 
+
 Why `SolidJS`? It is used because it is lightweight, doesn't use a VDOM and is almost as fast as Vanilla Javascript when compared to say `React`.
 
 If you don't have navigation within the SPA, it can be useful to embed the Javascript into a hook. If you have navigation within the SPA (this is the case here), then you lose your Liveview connection.
