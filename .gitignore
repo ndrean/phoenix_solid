@@ -1,5 +1,6 @@
 # The directory Mix will write compiled artifacts to.
 /_build/
+.elixir_ls
 /front/node_modules
 /front/dist/
 # If you run "mix test --cover", coverage assets end up here.
@@ -27,8 +28,8 @@ erl_crash.dump
 phx_solid-*.tar
 
 # Ignore assets that are produced by build tools.
-/priv/static/assets
-/priv/static/spa
+/priv/static/assets/
+/priv/static/spa/
 
 # Ignore digested assets cache.
 /priv/static/cache_manifest.json

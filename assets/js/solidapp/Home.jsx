@@ -1,4 +1,4 @@
-import { createSignal, createEffect } from "solid-js";
+import { createSignal, createEffect, For } from "solid-js";
 
 import ImgSVG from "./imgSVG.jsx";
 import { headerCl, solidCl, appCl } from "./app_css.js";
@@ -9,7 +9,10 @@ import useChannel from "../useChannel.js";
 import socket from "../userSocket.js";
 
 export default function Home() {
-  const [info, setInfo] = createSignal("");
+  const [info, setInfo] = createSignal(
+    { memory: 0, connected_nodes: [], curr_node: "", user: "" },
+    { equals: false }
+  );
   const [visits, setVisits] = createSignal(0);
   const [nodeEvt, setNodeEvt] = createSignal("");
 
@@ -18,10 +21,21 @@ export default function Home() {
     resp.status === "unauthorized" ? channel.leave() : setInfo(resp)
   );
   infoCh.on("nodes_event", (resp) => {
-    if (Object.keys(resp).includes("up"))
-      setNodeEvt(`Connected node: ${resp.up}`);
-    if (Object.keys(resp).includes("down"))
-      setNodeEvt(`Disconnected node: ${resp.down}`);
+    if (Object.keys(resp).includes("up")) {
+      setNodeEvt(`⬆️ ${resp.up}`);
+      console.log(resp.list);
+      setInfo((current) => {
+        current.connected_nodes = resp.list;
+        return current;
+      });
+    }
+    if (Object.keys(resp).includes("down")) {
+      setNodeEvt(`⬇️ ${resp.down}`);
+      setInfo((current) => {
+        current.connected_nodes = resp.list;
+        return current;
+      });
+    }
   });
 
   const visitCh = useChannel(socket, "counter:visits");
@@ -48,7 +62,10 @@ export default function Home() {
         <br />
         <p>Current node: {info().curr_node}</p>
         <p>Node event: {nodeEvt()}</p>
-        <p>Connected nodes: {info().connected_nodes}</p>
+        <p>Connected nodes:</p>
+        <ul>
+          <For each={info().connected_nodes}>{(node) => <li>{node}</li>}</For>
+        </ul>
       </header>
     </div>
   );

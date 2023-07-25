@@ -1,0 +1,69 @@
+# Untitled notebook
+
+```elixir
+Mix.install([
+  {:kino_db, "~> 0.2.1"},
+  {:phoenix_pubsub, "~> 2.1"},
+  {:libcluster, "~> 3.3.3"},
+  {:postgrex, "~> 0.17.2"}
+])
+```
+
+## Section
+
+```elixir
+topologies = [gossip: [strategy: Cluster.Strategy.Gossip]]
+
+children = [
+  {Phoenix.PubSub, name: :phx_pubsub},
+  {Cluster.Supervisor, [topologies, [name: Lv.ClusterSupervisor]]}
+  # %{id: PG, start: {:pg, :start_link, []}}
+]
+
+opts = [strategy: :one_for_one, name: Lv.Supervisor]
+Supervisor.start_link(children, opts)
+```
+
+```elixir
+{node(), Node.list(:connected)}
+```
+
+```elixir
+Phoenix.PubSub.direct_broadcast!(:phx_solid@app1, :phx_pubsub, "lb", "hola")
+```
+
+```elixir
+# Node.disconnect(:livebook_server@livebook)
+```
+
+```elixir
+{:inet.gethostname(), Node.list(:connected)}
+```
+
+```elixir
+:rpc.call(:phx_solid@app0, :inet, :gethostname, [])
+```
+
+<!-- livebook:{"attrs":{"database":"phx_solid_prod","hostname":"db","password_secret":"POSTGRES_PASSWORD","port":5432,"type":"postgres","use_ipv6":false,"username":"postgres","variable":"conn2"},"chunks":null,"kind":"Elixir.KinoDB.ConnectionCell","livebook_object":"smart_cell"} -->
+
+```elixir
+opts = [
+  hostname: "db",
+  port: 5432,
+  username: "postgres",
+  password: System.fetch_env!("LB_POSTGRES_PASSWORD"),
+  database: "phx_solid_prod"
+]
+
+{:ok, conn2} = Kino.start_child({Postgrex, opts})
+```
+
+<!-- livebook:{"attrs":{"cache_query":true,"connection":{"type":"postgres","variable":"conn2"},"query":"select * from social_users;","result_variable":"result","timeout":null},"chunks":null,"kind":"Elixir.KinoDB.SQLCell","livebook_object":"smart_cell"} -->
+
+```elixir
+result = Postgrex.query!(conn2, "select * from social_users;", [])
+```
+
+```elixir
+:rpc.call(:phx_solid@app0, PhxSolid.Repo, :get_by, [PhxSolid.SocialUser, %{id: 2}])
+```

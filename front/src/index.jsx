@@ -79,7 +79,8 @@ function app(ctx) {
             Comp2
           </A>
           <a
-            href={import.meta.env.VITE_RETURN_URL}
+            // href={import.meta.env.VITE_RETURN_URL}
+            href={window.location.origin + "/welcome"}
             class={inactive + " " + flexed}
           >
             <img src={phoenix} class={phoenixCl} alt="phoenix" />

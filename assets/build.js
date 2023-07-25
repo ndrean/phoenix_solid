@@ -28,6 +28,7 @@ if (deploy) {
     minify: true,
     splitting: true,
   };
+  build(opts);
 }
 
 if (watch) {
@@ -37,13 +38,9 @@ if (watch) {
   };
 
   context(opts)
-    .then((ctx) => {
-      ctx.watch();
-    })
+    .then((ctx) => (watch ? ctx.watch() : build(opts)))
     .catch((error) => {
       console.log(`Build error: ${error}`);
       process.exit(1);
     });
-} else {
-  build(opts);
 }

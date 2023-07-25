@@ -1,10 +1,11 @@
 defmodule PhxSolidWeb.FbSdkController do
   use PhxSolidWeb, :controller
+  alias PhxSolid.SocialUser
 
   def login(conn, params) do
     %{"email" => email, "name" => name, "picture" => picture} = params
 
-    case PhxSolid.User.create(%{email: email, name: name}) do
+    case SocialUser.create(%{email: email, name: name}) do
       {:error, errors} ->
         conn
         |> fetch_session()
@@ -15,7 +16,7 @@ defmodule PhxSolidWeb.FbSdkController do
       {:ok, user} ->
         token = PhxSolid.Token.user_generate(email)
         profile = %{email: email, name: name, picture: picture}
-        {:ok, u} = PhxSolid.User.update_token(%{id: user.id, user_token: token})
+        {:ok, u} = SocialUser.update_token(%{id: user.id, user_token: token})
 
         conn
         |> fetch_session()

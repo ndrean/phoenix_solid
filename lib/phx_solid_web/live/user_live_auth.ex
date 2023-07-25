@@ -11,9 +11,9 @@ defmodule PhxSolidWeb.UserLiveAuth do
   end
 
   def on_mount(:default, _p, %{"user_token" => user_token} = _session, socket) do
-    Logger.info("on mount check")
+    Logger.info("On mount check")
 
-    case PhxSolid.User.check(:user_token, user_token, :id) do
+    case PhxSolid.SocialUser.check(:user_token, user_token, :id) do
       {:ok, _user} ->
         {:cont,
          Phoenix.LiveView.attach_hook(
@@ -24,7 +24,7 @@ defmodule PhxSolidWeb.UserLiveAuth do
          )}
 
       {:error, :not_found} ->
-        put_flash(socket, :error, "invalid credentials, please login again")
+        # put_flash(socket, :error, "invalid credentials, please login again")
         {:halt, redirect(socket, to: "/")}
     end
   end

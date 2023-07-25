@@ -26,18 +26,25 @@ if config_env() == :prod do
   # environment variable DATABASE_URL is missing.
   # For example: ecto://USER:PASS@HOST/DATABASE
   # """
-  database_path =
-    System.get_env("DATABASE_PATH") ||
+  database_url =
+    System.get_env("DATABASE_URL") ||
       raise """
-      env var DATABASE_PATH is missing
+      env var DATABASE_URL is missing: ecto://user:pass@host/db
       """
+
+  # SQLITE3
+  # database_path =
+  #   System.get_env("DATABASE_PATH") ||
+  #     raise """
+  #     env var DATABASE_PATH is missing
+  #     """
 
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
   config :phx_solid, PhxSolid.Repo,
     # ssl: true,
-    database: database_path,
-    # url: database_url,
+    # database: database_path,
+    url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "5"),
     socket_options: maybe_ipv6
 

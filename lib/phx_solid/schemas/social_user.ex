@@ -1,13 +1,13 @@
-defmodule PhxSolid.User do
+defmodule PhxSolid.SocialUser do
   use Ecto.Schema
   import Ecto.Changeset
-  alias PhxSolid.{Repo, User}
+  alias PhxSolid.{Repo, SocialUser}
 
   @moduledoc """
-  Ecto wrapper for "users"
+  Ecto wrapper for "social_users"
   """
 
-  schema "users" do
+  schema "social_users" do
     field :email, :string
     field :name, :string
     field(:logs, :integer)
@@ -18,8 +18,8 @@ defmodule PhxSolid.User do
   @doc """
   validate user has both :email and :name and than :email is unique
   """
-  def changeset(%User{} = user, params \\ %{}) do
-    user
+  def changeset(%SocialUser{} = social_user, params \\ %{}) do
+    social_user
     |> Ecto.Changeset.cast(params, [:email, :name, :user_token])
     |> Ecto.Changeset.validate_required([:email, :name])
     |> unique_constraint(:email)
@@ -32,7 +32,7 @@ defmodule PhxSolid.User do
       {:ok, %User{}} || {:error, changeset.errors}
   """
   def create(params) do
-    changeset = changeset(%User{}, params)
+    changeset = changeset(%SocialUser{}, params)
 
     case Repo.insert(changeset,
            conflict_target: [:email],
@@ -41,7 +41,7 @@ defmodule PhxSolid.User do
              set: [updated_at: DateTime.utc_now()]
            ]
          ) do
-      {:ok, user} -> {:ok, user}
+      {:ok, social_user} -> {:ok, social_user}
       {:error, changeset} -> {:error, changeset.errors}
     end
   end
@@ -54,15 +54,15 @@ defmodule PhxSolid.User do
       {:ok, user} || {error, changeset.error}
   """
   def update_token(%{id: id, user_token: token}) do
-    case Repo.get_by(User, id: id) do
+    case Repo.get_by(SocialUser, id: id) do
       nil ->
         {:error, :not_found}
 
-      user ->
-        changeset = PhxSolid.User.changeset(user, %{user_token: token})
+      social_user ->
+        changeset = PhxSolid.SocialUser.changeset(social_user, %{user_token: token})
 
         case Repo.update(changeset) do
-          {:ok, user} -> {:ok, user}
+          {:ok, social_user} -> {:ok, social_user}
           {:error, changeset} -> {:error, changeset.errors}
         end
     end
@@ -76,16 +76,16 @@ defmodule PhxSolid.User do
       {:ok, "toto"} || {:error, "no entry"}
   """
   def check(key1, val, key2) do
-    user = Repo.get_by(User, %{key1 => val})
+    social_user = Repo.get_by(SocialUser, %{key1 => val})
 
-    case user do
+    case social_user do
       nil ->
         {:error, :not_found}
 
-      user ->
-        case Map.get(user, key2, nil) do
+      social_user ->
+        case Map.get(social_user, key2, nil) do
           nil -> {:error, :not_found}
-          _ -> {:ok, user}
+          _ -> {:ok, social_user}
         end
     end
   end

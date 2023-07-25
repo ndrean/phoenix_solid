@@ -13,9 +13,8 @@ defmodule PhxSolidWeb.Nav do
         <div class="flex py-3 text-sm" phx-mounted={@display.("#profile")}>
           <.link class="flex items-center border rounded-md p-2 mr-2" href={~p"/spa"}>
             <img src={~p"/images/solid.svg"} width="36" />
-            <span>Navigate to the SPA</span>
+            <span>SPA</span>
           </.link>
-          <%=  %>
           <.link
             class={@active.("#solid")}
             phx-click={@display.("#solid")}
@@ -31,8 +30,14 @@ defmodule PhxSolidWeb.Nav do
             User profile
           </.link>
         </div>
-        <div>
-          <.link href={~p"/dev/dashboard"}>Dashboard</.link>
+        <div class="flex flex-col justify-center py-3">
+          <.link href={~p"/dev/dashboard"} target="_blank" class="border rounded-md p-2 text-xs w-26">
+            LiveDashboard
+          </.link>
+          <a href="http://localhost:8080" target="_blank" class="flex items-center bg-[bisque] w-26">
+            <img src={~p"/images/logolb.png"} target="_blank" class="w-4" />
+            <span class="bg-[bisque] p-1 text-xs text-[midnightblue]">LiveBook</span>
+          </a>
         </div>
         <div class="py-3">
           <img src="/images/online.png" alt="line-status" id="online" />
