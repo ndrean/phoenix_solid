@@ -7,7 +7,7 @@ This project demonstrates a way to run clustered containers of a Phoenix web app
 The project describes recipes of how to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix app  in two ways:
 
 - embedded with a "hook" in a Liveview,
-- or rendered on a separate page.
+- or rendered on a separate page from a controller with `Plug.Conn.send_resp`
 
 Why would you do this? Many apps are developed as hybrid web apps: a SPA communicating with a backend.
 
