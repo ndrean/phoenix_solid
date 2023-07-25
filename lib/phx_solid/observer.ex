@@ -58,10 +58,4 @@ defmodule PhxSolid.Observer do
     PhxSolidWeb.Endpoint.broadcast!("nodes", "down", node)
     {:noreply, nil}
   end
-
-  @impl true
-  def handle_info(msg, _state) do
-    "________ in observer: #{inspect(msg)}"
-    {:noreply, nil}
-  end
 end
