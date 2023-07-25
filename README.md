@@ -473,12 +473,12 @@ services:
       - "8081:8081"
 
   app0:
-    <<: \*commun-web-app
+    <<: *commun-web-app
     hostname: app0
     ports: - "4000:4000"
 
   app1:
-    <<: \*commun-web-app
+    <<: *commun-web-app
     hostname: app1
     ports: - "4001:4000"
 ```
