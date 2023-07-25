@@ -22,9 +22,11 @@ What are the differences between the two options?
 - to use authenticated websockets with an authenticated user, we need to [adapt the documentation](https://hexdocs.pm/phoenix/channels.html#using-token-authentication).
 
 From the app, you can navigate to the LiveDashboard.
+
 <img width="898" alt="Screenshot 2023-07-25 at 17 07 49" src="https://github.com/ndrean/phoenix_solid/assets/6793008/6cd70751-6586-4475-9dc4-eb5c601a6182">
 
 You can connect to a Livebook. You can connect to the database as the cluster shares the same Docker network. This enables you not to open the Postgres database.
+
 <img width="626" alt="Screenshot 2023-07-25 at 17 02 24" src="https://github.com/ndrean/phoenix_solid/assets/6793008/1e3b896c-c85e-42cf-abff-c612616e78de">
 
 <details><summary>Authenticate websockets</summary>
