@@ -1,26 +1,34 @@
 # PhxSolid
 
-This project demonstrates a way to run clustered containers of a Phoenix web app with an SPA embedded, backed by a PostgreSQL database and connected to a Livebook node to monitor the web app nodes.
+This project demonstrates a way to run clustered containers of a Phoenix web app with a SPA embedded, backed by a PostgreSQL database and connected to a Livebook node to monitor the web app nodes.
 
-The project describes recipies of how to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix app in two ways:
+<img width="478" alt="Screenshot 2023-07-25 at 17 03 43" src="https://github.com/ndrean/phoenix_solid/assets/6793008/ad0998dd-b608-42ae-b228-ae37e508d6a4">
+
+The project describes recipes of how to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix app in two ways:
 
 - embedded with a "hook" in a Liveview,
-- or rendered in a separate page.
+- or rendered on a separate page.
 
-Why would you do this? Many apps are developped as hybrid web apps: an SPA communicating with a backend.
+Why would you do this? Many apps are developed as hybrid web apps: a SPA communicating with a backend.
 Why `SolidJS`? It is used because it is lightweight, doesn't use a VDOM and is almost as fast as Vanilla Javascript when compared to say `React`.
 
-If you don't have navigation within the SPA, it can be useful to embed the Javascript into a hook. If you have navigation within the SPA (this is the case here), then you loose your Liveview connection.
+If you don't have navigation within the SPA, it can be useful to embed the Javascript into a hook. If you have navigation within the SPA (this is the case here), then you lose your Liveview connection.
 
 To communicate with the Phoenix app, you need authenticated websocket. An authentication is proposed (Google One Tap, using a Magic link login <https://johnelmlabs.com/posts/magic-link-auth> or anonymous account)
 
 What are the differences between the two options?
 
-- the full page is built with `Vite` (with Esbuild and Rollup). The compilation of the fullpage code is a custom process, run via a `Task`. The embedded version is compiled with `Esbuild` via a modified `mix assets.deploy`: you set up a custom "build" version of Esbuild. Rollup is _more performant_ than Esbuild to minimize the size of the bundles.
+- the full page is built with `Vite` (with Esbuild and Rollup). The compilation of the full-page code is a custom process, run via a `Task`. The embedded version is compiled with `Esbuild` via a modified `mix assets.deploy`: you set up a custom "build" version of Esbuild. Rollup is _more performant_ than Esbuild to minimize the size of the bundles.
 - to use authenticated websockets with an authenticated user, we need to [adapt the documentation](https://hexdocs.pm/phoenix/channels.html#using-token-authentication).
 
+From the app, you can navigate to the LiveDashboard.
+<img width="898" alt="Screenshot 2023-07-25 at 17 07 49" src="https://github.com/ndrean/phoenix_solid/assets/6793008/6cd70751-6586-4475-9dc4-eb5c601a6182">
+
+You can connect to a Livebook. You can connect to the database as the cluster shares the same Docker network. This enables you not to open the Postgres database.
+<img width="626" alt="Screenshot 2023-07-25 at 17 02 24" src="https://github.com/ndrean/phoenix_solid/assets/6793008/1e3b896c-c85e-42cf-abff-c612616e78de">
+
 <details><summary>Authenticate websockets</summary>
-We firstly generate a `Phoenix.Token`. When we use the embedded SPA, we pass this "user token" into the `conn.assigns` from a Phoenix controller and it will be available in the HTML "root.html.heex" template. It is hard coded, attached to the `window` object so Javascript is able to read it. For the backend Liveview, we pass it into a session so available in the `Phoenix.LiveView.mount/3` callback. The embedded version will be declared via a dataset `phx-hook` and rendered in a dedicated component. For the fullpage version, a controller will `Plug.Conn.send_resp` the compiled "index.html" file of the SPA. In the controller, we hard code the token (available in the "conn.assigns") into this file. Then Javascript will be able to read it and use it.
+We first generate a `Phoenix.Token`. When we use the embedded SPA, we pass this "user token" into the `conn.assigns` from a Phoenix controller and it will be available in the HTML "root.html.heex" template. It is hard coded, attached to the `window` object so Javascript is able to read it. For the backend Liveview, we pass it into a session so available in the `Phoenix.LiveView.mount/3` callback. The embedded version will be declared via a dataset `phx-hook` and rendered in a dedicated component. For the fullpage version, a controller will `Plug.Conn.send_resp` the compiled "index.html" file of the SPA. In the controller, we hard code the token (available in the "conn.assigns") into this file. Then Javascript will be able to read it and use it.
 </details>
 
 ## "hooked" SPA
@@ -132,7 +140,7 @@ Since we use code splitting, you will also need to:
  }
 ```
 
-#### Mount an SPA as a hook to a Liveview
+#### Mount a SPA as a hook to a LiveView
 
 We will mount a LiveView and render the SPA inside a component. This component has a dataset `phx-hook="solidAppHook"`. This hook references the SPA Javascript code.
 
@@ -159,7 +167,7 @@ new LiveSocket("/live", Socket, {
 
 ```
 
-The code of the hook looks like:
+The code of the hook looks like this:
 
 ```js
 //SolidAppHook.js
@@ -168,15 +176,15 @@ const SolidAppHook = {
 }
 ```
 
-You set up a "user_socket" and authenticate it in the backend with the "user token". We will attach a `channel`to have two ways communication between the front and the back.
+You set up a "user_socket" and authenticate it in the backend with the "user token". We will attach a `channel`to have two ways of communication between the front and the back.
 
 ## Navigation with Phoenix/Liveview
 
-Once you are authenticated via the sign-in, you are redirected to a Liveview. We set up a tab like navigation where you can choose to navigate to the SPA in a full page or display the embedded SPA. On this page, all the code for the embedded SPA is already loaded.
+Once you are authenticated via the sign-in, you are redirected to a Liveview. We set up a tab-like navigation where you can choose to navigate to the SPA in a full page or display the embedded SPA. On this page, all the code for the embedded SPA is already loaded.
 
-Note that the SPA has an internal navigation. When you use it in the embedded version, you deconnect from the Liveview. The fullpage version is also deconnected from the Liveview.
+Note that the SPA has an internal navigation. When you use it in the embedded version, you disconnect from the LiveView. The full-page version is also disconnected from the Liveview.
 
-> An `on mount` function is run on each mount of the liveview as [recommended by the doc](https://hexdocs.pm/phoenix_live_view/security-model.html#mounting-considerations).
+> An `on mount` function is run on each mount of the LiveView as [recommended by the doc](https://hexdocs.pm/phoenix_live_view/security-model.html#mounting-considerations).
 
 ## **non hook** SPA
 
@@ -287,7 +295,7 @@ In order to save the _state of the SPA_, we use channels through the `Socket` ob
 
 ### The `socket`
 
-It is an object that holds the WS. We will set up the socket SPA side and server side. We generate the 2 files - server & client - needed to handle bith sides of the socket. As previsouly stated, make sure the npm package `Phoenix.js` is installed in the SPA.
+It is an object that holds the WS. We will set up the socket SPA side and server side. We generate the 2 files - server & client - needed to handle bith sides of the socket. As previously stated, make sure the npm package `Phoenix.js` is installed in the SPA.
 
 ```bash
 mix phx.gen.socket User
@@ -311,7 +319,7 @@ if (window.userToken) socket.connect();
 export default socket;
 ```
 
-We also built a helper `useChannel`. It attaches a channel to the socket with a topic and returns the channel, ready to be used (`.on`, `.push`). Use it every time you need to create a channel and communicate with the backend. It has a cleaning stage in its life cycle. For example, the SPA has a navigation; when we use a page, it opens a channel for the data in this page, and when we leave this page, this channel is closed.
+We also built a helper `useChannel`. It attaches a channel to the socket with a topic and returns the channel, ready to be used (`.on`, `.push`). Use it every time you need to create a channel and communicate with the backend. It has a cleaning stage in its life cycle. For example, the SPA has navigation; when we use a page, it opens a channel for the data on this page, and when we leave this page, this channel is closed.
 
 ```js
 import { onCleanup } from "solid-js";
@@ -378,9 +386,9 @@ We create channels per piece of UI state we want to save. For example, we count 
 
 It is a 3 stages process with Debian 11 based images:
 
-- a builder stage for the fullpage SPA based on a NodeJS 18 Debian 11 based image. In dev non-docker mode, you can build "by hand" `mix spa --path="./priv/static/spa"`. This stage is used to differenciate the rebuild from the hooked version.
-- a builder stage for the Phoenix app and its JS assets, based on Elixir with NodeJS injected, and produce a release and compiled JS assets. We inject the fullpage SPA here.
-- the final "runner" stage to deliver a minimal Debian based image.
+- a builder stage for the full page SPA based on a NodeJS 18 Debian 11 based image. In dev non-docker mode, you can build "by hand" `mix spa --path="./priv/static/spa"`. This stage is used to differenciate the rebuild from the hooked version.
+- a builder stage for the Phoenix app and its JS assets, based on Elixir with NodeJS injected, and produce a release and compiled JS assets. We inject the full page SPA here.
+- the final "runner" stage to deliver a minimal Debian-based image.
 
 > We need to install `nodejs` and `npm`, then `pnpm` as (curiously???) NPM didn't accept "link:../deps/phoenix..".
 
@@ -520,7 +528,7 @@ Node.list(:connected)
 ## State persistence
 
 With "standard" SSR, the backend manages the state, and the UI is a simple rendering machine
-The SPA itself can use a state management. Since it is lost each time you deconnect, it may need to be persisted. We used a "context" pattern in the SPA.
+The SPA itself can use state management. Since it is lost each time you disconnect, it may need to be persisted. We used a "context" pattern in the SPA.
 We could set up a Redis session or use the database. If the app is distributed, most probably Redis or the database should be used.
 
 ## Misc
@@ -561,7 +569,7 @@ and source them:
 source .env-dev
 ```
 
-### Content Secuity Policy
+### Content Security Policy
 
 In the `router` module, you will set the CSP as per [Google's recommendations](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid#content_security_policy)
 
@@ -643,9 +651,9 @@ sqlite> select * from social_users;
 sqlite .quit
 ```
 
-### CSS Typewritter
+### CSS Typewriter
 
-Typewritter effect: <https://dev.to/lazysock/make-a-typewriter-effect-with-tailwindcss-in-5-minutes-dc>
+Typewriter effect: <https://dev.to/lazysock/make-a-typewriter-effect-with-tailwindcss-in-5-minutes-dc>
 
 Configuration in Tailwind.config
 
