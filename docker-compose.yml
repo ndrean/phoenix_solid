@@ -5,6 +5,17 @@ version: "3.9"
 #     source: ./db
 #     target: /db
 
+x-web-app: &commun-web-app
+  image: phx_solid
+  depends_on:
+    - db
+  environment:
+    - RELEASE_DISTRIBUTION=sname
+  env_file:
+    - .env-docker
+  networks:
+    - mynet
+
 volumes:
   pg-data:
 
@@ -50,39 +61,50 @@ services:
       - "8081:8081"
 
   app0:
-    # build: .
-    image: phx_solid
-    # command: "start"
+    <<: *commun-web-app
     hostname: app0
-    depends_on:
-      - db
-    environment:
-      RELEASE_DISTRIBUTION: sname
-    #   RELEASE_NODE: "phx_solid@app0.mynet"
     ports:
       - "4000:4000"
-    env_file:
-      - .env-docker
-    networks:
-      - mynet
-    # volumes:
-    #   - ./db:/db
 
   app1:
-    # build: .
-    image: phx_solid
-    # command: "start_iex"
+    <<: *commun-web-app
     hostname: app1
-    depends_on:
-      - db
-    environment:
-      RELEASE_DISTRIBUTION: sname
-    #   RELEASE_NODE: "phx_solid@app1.mynet"
-    env_file:
-      - .env-docker
     ports:
       - "4001:4000"
-    networks:
-      - mynet
-    # volumes:
-    #   - ./db:/db
+  # app0:
+  #   # build: .
+  #   image: phx_solid
+  #   # command: "start"
+  #   hostname: app0
+  #   depends_on:
+  #     - db
+  #   environment:
+  #     RELEASE_DISTRIBUTION: sname
+  #   #   RELEASE_NODE: "phx_solid@app0.mynet"
+  #   ports:
+  #     - "4000:4000"
+  #   env_file:
+  #     - .env-docker
+  #   networks:
+  #     - mynet
+  #   # volumes:
+  #   #   - ./db:/db
+
+  # app1:
+  #   # build: .
+  #   image: phx_solid
+  #   # command: "start_iex"
+  #   hostname: app1
+  #   depends_on:
+  #     - db
+  #   environment:
+  #     RELEASE_DISTRIBUTION: sname
+  #   #   RELEASE_NODE: "phx_solid@app1.mynet"
+  #   env_file:
+  #     - .env-docker
+  #   ports:
+  #     - "4001:4000"
+  #   networks:
+  #     - mynet
+  #   # volumes:
+  #   #   - ./db:/db

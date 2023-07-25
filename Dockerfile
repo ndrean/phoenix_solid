@@ -1,5 +1,4 @@
-# Find eligible builder and runner images on Docker Hub. We use Ubuntu/Debian
-# instead of Alpine to avoid DNS resolution issues in production.
+# Find eligible builder and runner images on Docker Hub. We use Ubuntu/Debian instead of Alpine to avoid DNS resolution issues in production.
 #
 # https://hub.docker.com/r/hexpm/elixir/tags?page=1&name=ubuntu
 # https://hub.docker.com/_/ubuntu?tab=tags

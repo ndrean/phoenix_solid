@@ -1,24 +1,27 @@
 # PhxSolid
 
-The project is to made to describe how to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix app. It will render two versions of an SPA:
+This project demonstrates a way to run clustered containers of a Phoenix web app with an SPA embedded, backed by a PostgreSQL database and connected to a Livebook node to monitor the web app nodes.
 
-- one embedded with a "hook" in a Liveview,
-- one rendered in a separate page.
+The project describes recipies of how to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix app in two ways:
 
-If you use only a component, then I can be usefull to embed the Javascript into a hook. If you have navigation within the SPA (this is the case here), then in the case of the embedded SPA, you loose your Liveview. For this reason, the best option is to run the SPA in a standalone full page.
+- embedded with a "hook" in a Liveview,
+- or rendered in a separate page.
 
-The ideal is to have stateless apps, the front and the back. We may use synchronization of the state of SPA with the backend for some bits of state. We used the context pattern in the SPA, and the relevant state of the backend is stored in a database, SQLite.
+Why would you do this? Many apps are developped as hybrid web apps: an SPA communicating with a backend.
+Why `SolidJS`? It is used because it is lightweight, doesn't use a VDOM and is almost as fast as Vanilla Javascript when compared to say `React`.
 
-It starts as a normal Phoenix SSR app with a login to authenticate the user. We used a Google One Tap login, a Facebook login and a Magic link login <https://johnelmlabs.com/posts/magic-link-auth>
+If you don't have navigation within the SPA, it can be useful to embed the Javascript into a hook. If you have navigation within the SPA (this is the case here), then you loose your Liveview connection.
 
-The SPA will commmunicate with the Phoenix node through an authenticated websocket. Channels will be set up to maintain the state of the SPA as well as push or broadcast information from the backend to the SPA.
+To communicate with the Phoenix app, you need authenticated websocket. An authentication is proposed (Google One Tap, using a Magic link login <https://johnelmlabs.com/posts/magic-link-auth> or anonymous account)
 
 What are the differences between the two options?
 
 - the full page is built with `Vite` (with Esbuild and Rollup). The compilation of the fullpage code is a custom process, run via a `Task`. The embedded version is compiled with `Esbuild` via a modified `mix assets.deploy`: you set up a custom "build" version of Esbuild. Rollup is _more performant_ than Esbuild to minimize the size of the bundles.
-- to use authenticated websockets with an authenticated user, we need to [adapt the documentation](https://hexdocs.pm/phoenix/channels.html#using-token-authentication). We firstly generate a `Phoenix.Token`.
-  - when we use the embedded SPA, we pass this "user token" into the `conn.assigns` from a Phoenix controller and it will be available in the HTML "root.html.heex" template. It is hard coded, attached to the `window` object so Javascript is able to read it. For the backend Liveview, we pass it into a session so available in the `Phoenix.LiveView.mount/3` callback. The embedded version will be declared via a dataset `phx-hook` and rendered in a dedicated component.
-  - For the fullpage version, a controller will `Plug.Conn.send_resp` the compiled "index.html" file of the SPA. In the controller, we hard code the token (available in the "conn.assigns") into this file. Then Javascript will be able to read it and use it.
+- to use authenticated websockets with an authenticated user, we need to [adapt the documentation](https://hexdocs.pm/phoenix/channels.html#using-token-authentication).
+
+<details><summary>Authenticate websockets</summary>
+We firstly generate a `Phoenix.Token`. When we use the embedded SPA, we pass this "user token" into the `conn.assigns` from a Phoenix controller and it will be available in the HTML "root.html.heex" template. It is hard coded, attached to the `window` object so Javascript is able to read it. For the backend Liveview, we pass it into a session so available in the `Phoenix.LiveView.mount/3` callback. The embedded version will be declared via a dataset `phx-hook` and rendered in a dedicated component. For the fullpage version, a controller will `Plug.Conn.send_resp` the compiled "index.html" file of the SPA. In the controller, we hard code the token (available in the "conn.assigns") into this file. Then Javascript will be able to read it and use it.
+</details>
 
 ## "hooked" SPA
 
@@ -27,6 +30,8 @@ What are the differences between the two options?
 You set up a custom `Esbuild` configuration to use the [custom plugin `solidPlugin`](https://github.com/amoutonbrady/esbuild-plugin-solid). Since SolidJS uses JSX for templating, we have to be sure Esbuild compiles the JSX files for **SolidJS**.
 
 The Phoenix documentation explains [how to add a plugin](https://hexdocs.pm/phoenix/asset_management.html#esbuild-plugins). Esbuild will build the assets when we run the following function:
+
+<details><summary>build.js</summary>
 
 ```js
 // build.js
@@ -75,7 +80,7 @@ if (watch) {
 }
 ```
 
-To take advantage of the code splitting, pass `splitting: true` so that the deploy `node build.js --deploy` will split the code into chunks.
+</details>
 
 The "config.exs" file will only contain the required version:
 
@@ -85,7 +90,7 @@ config :esbuild,
   version: "0.17.11"
 ```
 
-To run `build.s`, the documentation explains to modify the alias `mix assets.deploy` defined in the Mix.Project: you run `node build.js --deploy` in the "/assets" folder.
+The documentation explains to modify the alias `mix assets.deploy` defined in the Mix.Project: you run `node build.js --deploy` in the "/assets" folder.
 
 ```elixir
 "assets.deploy": [
@@ -95,16 +100,17 @@ To run `build.s`, the documentation explains to modify the alias `mix assets.dep
 ]
 ```
 
-You will also need to:
+> Check how to [configure Tailwind with Phoenix](https://tailwindcss.com/docs/guides/phoenix)
 
-- check how to [configure Tailwind with Phoenix](https://tailwindcss.com/docs/guides/phoenix)
+Since we use code splitting, you will also need to:
+
 - add "type=module" in the "my_app_web/components/layouts/root.html.heex" file as code splitting works with ESM (using `import`).
 
 ```html
 <script defer phx-track-static type="module" type="text/javascript" src={~p"/assets/app.js"}></script>
 ```
 
-- declare you are using `"type": "module"` in "/assets/package.json"
+- and declare you are using `"type": "module"` in "/assets/package.json"
 
 ```js
 //...
@@ -128,7 +134,7 @@ You will also need to:
 
 #### Mount an SPA as a hook to a Liveview
 
-We will mount a LiveView and render a component. This component has a "hook" attached, declared via a dataset `phx-hook="solidAppHook"` in the HTML. This hook references the SPA Javascript code.
+We will mount a LiveView and render the SPA inside a component. This component has a dataset `phx-hook="solidAppHook"`. This hook references the SPA Javascript code.
 
 ```elixir
 use Phoenix.Component
@@ -368,41 +374,148 @@ We create channels per piece of UI state we want to save. For example, we count 
 
 ## Docker
 
-It is a 3 stage process with Debian based images:
+### Dockerfile
 
-- build the fullpage SPA based on a NodeJS image. You can build "by hand" `mix spa --path="./priv/static/spa"` or use Docker to build it in the first stage. The stage is differenciated in order not to rebuild all if a change is made in this one and not the "hooked" one.
-- prebuild Phoenix and its assets, based on Elixir with NodeJS injected, and produce a release
-- deliver a minimal Debian based image
+It is a 3 stages process with Debian 11 based images:
 
-We need to install `nodejs` and `npm`, then `pnpm` as (curiously???) NPM didn't accept "link:../deps/phoenix..".
+- a builder stage for the fullpage SPA based on a NodeJS 18 Debian 11 based image. In dev non-docker mode, you can build "by hand" `mix spa --path="./priv/static/spa"`. This stage is used to differenciate the rebuild from the hooked version.
+- a builder stage for the Phoenix app and its JS assets, based on Elixir with NodeJS injected, and produce a release and compiled JS assets. We inject the fullpage SPA here.
+- the final "runner" stage to deliver a minimal Debian based image.
+
+> We need to install `nodejs` and `npm`, then `pnpm` as (curiously???) NPM didn't accept "link:../deps/phoenix..".
+
+### Docker-Compose and Postgres init
+
+We run 4 services: 2 instances of the web app, the Postgres database and a Livebook.
+
+To start a Postgres container, it is enough to pass the env variables `POSTGRES_PASSWORD`, `POSTGRES_USER` and `POSTGRES_DB`. This will create a database.
+
+The web app uses a `DATABASE_URL` env variable in the form below. Note that the "hostname" is the **service name\*** (and not "localhost" as in dev non-docker mode)
+
+```elixir
+ecto://<user>:<pass>@<service>/<POSTGRES_DB_{MIX_ENV}>
+```
+
+To run the migrations, we will use the Docker entrypoint "docker-entrypoint-initdb.d" and bind the `init.sql` file from the host into this directory of the Postgres container.
+
+To generate this file, we use the [code generated by the migration in DEV mode](https://hexdocs.pm/ecto_sql/Mix.Tasks.Ecto.Migrate.html#module-command-line-options):
+
+```elixir
+mix ecto.migrate --log-migrations-sql > ./init.sql
+```
+
+It will remain to clean this file to play it.
+
+<details>
+<summary>--- The docker-compose file ---</summary>
 
 ```bash
-docker-compose build
+version: "3.9"
+
+volumes:
+  pg-data:
+
+networks:
+  mynet:
+
+x-web-app: &commun-web-app
+  image: phx_solid
+  depends_on:
+    - db
+  environment:
+    RELEASE_DISTRIBUTION: sname
+  env_file:
+    - .env-docker
+  networks:
+    - mynet
+
+services:
+  db:
+    image: postgres:15.3-bullseye
+    env_file:
+      - .env-docker
+    restart: always
+    networks:
+      - mynet
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432"
+
+  livebook:
+    image: ghcr.io/livebook-dev/livebook
+    networks:
+      - mynet
+    depends_on:
+      - db
+    environment:
+      - MIX_ENV=prod
+      - LIVEBOOK_DISTRIBUTION=sname
+      - LIVEBOOK_COOKIE=supersecret
+      - LIVEBOOK_PASSWORD=securesecret
+      - SECRET_KEY_BASE=HRPM+KVxrXtYiIni27wn1pXrNc/cl7wjHl/u5TWQxqZkuvJ6Q4NBF+WMUVUpQVIY
+    hostname: livebook
+    volumes:
+      - ./data:/data/
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+
+  app0:
+    <<: \*commun-web-app
+    hostname: app0
+    ports: - "4000:4000"
+
+  app1:
+    <<: \*commun-web-app
+    hostname: app1
+    ports: - "4001:4000"
+```
+
+</details>
+
+To build this, run:
+
+```bash
+docker build -t phx_solid .
 docker-compose up
 ```
 
-In the Livebook:
+In the Livebook container, we will bind a local folder to the "/data" folder to save the ".livemd" file that contains the markdown we want to run in the Livebook.
+
+You may use `Base.url_encode64(:crypto.strong_rand_bytes(40))` to generate the env variable `RELEASE_COOKIE`.
+
+### Livebook node discovery
+
+To enable node discovery, add the `libcluster` dependency and the same code as in the web app:
 
 ```elixir
 topologies = [gossip: [strategy: Cluster.Strategy.Gossip]]
 
 children = [
-  {Phoenix.PubSub, name: PhxSolid.PubSub},
-  {Cluster.Supervisor, [topologies, [name: PhxSolid.ClusterSupervisor]]}
+  {Cluster.Supervisor, [topologies, [name: Lv.ClusterSupervisor]]}
 ]
 
 opts = [strategy: :one_for_one, name: PhxSolid.Supervisor]
 Supervisor.start_link(children, opts)
 ```
 
+Since the Livebook node is hidden, you need to set up the node monitoring as below if you want to capture a `:nodeup` (or down) event:
+
+```elixir
+:net_kernel.monitor_nodes(true, %{node_type: :all})
+```
+
 You can check:
 
 ```elixir
 Node.list(:connected)
-:rpc.call(:"phx_solid@app0.mynet", PhxSolid.Repo, :get_by, [PhxSolid.SocialUser, %{id: 1}])
 ```
 
-Use `Base.url_encode64(:crypto.strong_rand_bytes(40))` to populate the env variable `RELEASE_COOKIE`.
+```elixir
+:rpc.call(:"phx_solid@app0", PhxSolid.Repo, :get_by, [PhxSolid.SocialUser, %{id: 1}])
+```
 
 ## State persistence
 
@@ -494,10 +607,6 @@ docker exec -it web bash
 ls /usr/share/nginx/
 ```
 
-### Notes Postgresql / Docker
-
-To create a database, it is sufficient to use the env variables PSOTGRES_USER, POSTGRES_PASSWORD and POSTGRES_DB to the Postgres container: this will create the database. To run the migration, use a `/docker-entrypoint-initdb.d/init.sql` entry.
-
 ### Notes on SQLITE
 
 Gist: <https://gist.github.com/mcrumm/98059439c673be7e0484589162a54a01>
@@ -512,7 +621,7 @@ In "application.ex", do:
  PhxSolid.Release.migrate()
 ```
 
-[Userts with SQLite3](https://www.sqlite.org/lang_UPSERT.html) works when the target field has a unique constraint (`create unique_index` in the migration):
+[Upserts with SQLite3](https://www.sqlite.org/lang_UPSERT.html) works when the target field has a unique constraint (`create unique_index` in the migration):
 
 ```elixir
 Repo.insert!(
