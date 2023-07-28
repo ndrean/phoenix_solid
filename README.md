@@ -548,7 +548,7 @@ To enable **Google One tap**, there is a module `:google_certs`. It needs the de
 
 You will need credentials from Google.
 
-- create a project in the API library: <https://console.cloud.google.com/apis/librabry>
+- create a project in the API library: <https://console.cloud.google.com/apis/library>
 - then create or select a projecct, and go for the credentials as a **web application**
 - ⚠️ the "Authorized Javascript origins" should contain **2** fields, **one with AND another without the port**.
 
