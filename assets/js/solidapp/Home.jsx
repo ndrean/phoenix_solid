@@ -1,4 +1,4 @@
-import { createSignal, createEffect, For } from "solid-js";
+import { createSignal, For } from "solid-js";
 
 import ImgSVG from "./imgSVG.jsx";
 import { headerCl, solidCl, appCl } from "./app_css.js";

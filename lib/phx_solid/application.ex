@@ -5,8 +5,10 @@ defmodule PhxSolid.Application do
 
   @impl true
   def start(_type, _args) do
+    # SQLITE3
     # PhxSolid.Release.migrate()
 
+    # :ok = Logster.attach_phoenix_logger()
     topologies = [gossip: [strategy: Elixir.Cluster.Strategy.Gossip]]
 
     children = [

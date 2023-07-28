@@ -33,8 +33,9 @@ window.addEventListener("phx:page-loading-start", (_info) => topbar.show(300));
 window.addEventListener("phx:page-loading-stop", (_info) => topbar.hide());
 
 // GOOGLE-ONE-TAP
-const oneTap = document.querySelector("#g_id_onload");
-if (oneTap) oneTap.dataset.login_uri = window.location.href + "auth/one_tap/";
+// const oneTap = document.querySelector("#g_id_onload");
+// if (oneTap)
+//   oneTap.dataset.login_uri = window.location.origin + "/auth/one_tap/";
 
 //  FB-SDK
 const fbutton = document.querySelector("#fb-btn");
@@ -42,3 +43,11 @@ if (fbutton) Facebook(fbutton);
 
 const online = document.getElementById("online");
 if (online) onlineStatus(online);
+
+// const btn = document.getElementById("btnDiv");
+// if (btn) {
+//   console.log(btn);
+//   const div = document.createElement("div");
+//   div.classList.add("g-signin2");
+//   div.dataset.onsuccess = "onSignIn";
+// }

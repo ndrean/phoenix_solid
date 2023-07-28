@@ -13,6 +13,10 @@ import Config
 config :phx_solid,
   ecto_repos: [PhxSolid.Repo]
 
+config :phx_solid,
+  g_auth_ctrl_path: "/users/oauth",
+  g_certs_cb_path: "/users/one_tap"
+
 # config :phx_solid, PhxSolid.Repo,
 #   database_url: System.get_env("DATABASE_URL"),
 #   migration_lock: true
@@ -69,7 +73,11 @@ config :logger, :console,
   metadata: [:request_id]
 
 # Use Jason for JSON parsing in Phoenix
-config :phoenix, :json_library, Jason
+config :phoenix, json_library: Jason
+
+# logger: false
+
+# config :logster, formatter: :json
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

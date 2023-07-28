@@ -24,6 +24,7 @@ defmodule PhxSolidWeb.UserLiveAuth do
          )}
 
       {:error, :not_found} ->
+        Logger.warning("not found on mount")
         # put_flash(socket, :error, "invalid credentials, please login again")
         {:halt, redirect(socket, to: "/")}
     end

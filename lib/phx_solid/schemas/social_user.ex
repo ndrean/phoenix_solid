@@ -21,7 +21,7 @@ defmodule PhxSolid.SocialUser do
   def changeset(%SocialUser{} = social_user, params \\ %{}) do
     social_user
     |> Ecto.Changeset.cast(params, [:email, :name, :user_token])
-    |> Ecto.Changeset.validate_required([:email, :name])
+    |> Ecto.Changeset.validate_required([:email, :name, :user_token])
     |> unique_constraint(:email)
   end
 

@@ -7,11 +7,15 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@solid-primitives/refs": "^1.0.4",
     "@solidjs/router": "^0.8.2",
     "bau-solidcss": "^0.1.15",
+    "chart.js": "^4.3.1",
+    "frappe-charts": "^1.6.2",
     "phoenix": "link:../deps/phoenix",
     "phoenix_html": "link:../deps/phoenix_html",
     "phoenix_live_view": "link:../deps/phoenix_live_view",
+    "solid-chartjs": "^1.3.8",
     "solid-js": "^1.7.7",
     "topbar": "^2.0.1"
   },

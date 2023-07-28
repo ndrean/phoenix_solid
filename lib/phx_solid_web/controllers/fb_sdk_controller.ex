@@ -5,7 +5,7 @@ defmodule PhxSolidWeb.FbSdkController do
   def login(conn, params) do
     %{"email" => email, "name" => name, "picture" => picture} = params
 
-    case SocialUser.create(%{email: email, name: name}) do
+    case SocialUser.create(%{email: email, name: name, user_token: "0"}) do
       {:error, errors} ->
         conn
         |> fetch_session()

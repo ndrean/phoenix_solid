@@ -18,7 +18,13 @@ defmodule PhxSolidWeb.WelcomeLive do
 
   @impl true
   def mount(_params, session, socket) do
-    %{"user_token" => user_token, "profile" => profile, "logs" => logs, "origin" => origin} =
+    %{
+      "user_token" => user_token,
+      "profile" => profile,
+      "logs" => logs,
+      "origin" => origin
+      # "g_client_id" => g_client_id
+    } =
       session
 
     if connected?(socket) do
@@ -31,7 +37,9 @@ defmodule PhxSolidWeb.WelcomeLive do
        profile: profile,
        origin: origin,
        logs: logs
+       #  g_client_id: g_client_id
      )}
+    |> dbg()
   end
 
   # the event of changing the url is captured with handle_params

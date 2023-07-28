@@ -4,13 +4,12 @@ This project demonstrates a way to run clustered containers of a Phoenix web app
 
 <img width="478" alt="Screenshot 2023-07-25 at 17 03 43" src="https://github.com/ndrean/phoenix_solid/assets/6793008/ad0998dd-b608-42ae-b228-ae37e508d6a4">
 
-The project describes recipes of how to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix app  in two ways:
+The project describes recipes of how to include a [SolidJS](https://www.solidjs.com/) app in a Phoenix app in two ways:
 
 - embedded with a "hook" in a Liveview,
 - or rendered on a separate page from a controller with `Plug.Conn.send_resp`
 
 Why would you do this? Many apps are developed as hybrid web apps: a SPA communicating with a backend.
-
 
 Why `SolidJS`? It is used because it is lightweight, doesn't use a VDOM and is almost as fast as Vanilla Javascript when compared to say `React`.
 
@@ -545,13 +544,15 @@ To enable **Google One tap**, there is a module `:google_certs`. It needs the de
 {:jason, "~> 1.4"},{:joken, "~> 2.5"}
 ```
 
-`Joken` will bring in `JOSE` which is used to decrypt the PEM version.
+`Joken` will bring in `JOSE` which is used to decrypt the PEM version and JWK version.
 
 You will need credentials from Google.
 
-- create a project in the <https://console.cloud.google.com>
-- then create credentials as a **web application**
-- ⚠️ the "Authorized Javascript origins" should contain **2** fields, with AND without the port.
+- create a project in the API library: <https://console.cloud.google.com/apis/librabry>
+- then create or select a projecct, and go for the credentials as a **web application**
+- ⚠️ the "Authorized Javascript origins" should contain **2** fields, **one with AND another without the port**.
+
+Get the HTML with Google's [code generator](https://developers.google.com/identity/gsi/web/tools/configurator).
 
 You set up a "one_tap_controller". It is a POST endpoint and will receive a response from Google. It will set a `user_token` and the users' `profile` in the session, and redirect to a "welcome" page.
 

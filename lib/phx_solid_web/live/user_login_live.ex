@@ -1,5 +1,6 @@
 defmodule PhxSolidWeb.UserLoginLive do
   use PhxSolidWeb, :live_view
+  require Logger
 
   def render(assigns) do
     ~H"""
@@ -45,7 +46,7 @@ defmodule PhxSolidWeb.UserLoginLive do
         phx-update="ignore"
         class="my-0 py-0"
       >
-        <.input field={@form[:email]} type="email" label="Email" required />
+        <.input field={@form[:email]} id="magic" type="email" label="Email" required />
         <:actions>
           <.button class="w-full">
             Send me a link <.icon name="hero-envelope" />
@@ -59,6 +60,10 @@ defmodule PhxSolidWeb.UserLoginLive do
   def mount(_params, _session, socket) do
     email = live_flash(socket.assigns.flash, :email)
     form = to_form(%{"email" => email}, as: "user")
-    {:ok, assign(socket, form: form), temporary_assigns: [form: form]}
+
+    {:ok,
+     assign(socket,
+       form: form
+     ), temporary_assigns: [form: form]}
   end
 end

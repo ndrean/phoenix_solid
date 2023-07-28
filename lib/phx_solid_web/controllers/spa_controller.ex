@@ -14,8 +14,11 @@ defmodule PhxSolidWeb.SPAController do
 
   defp index_html do
     # line below for the release
-    Application.app_dir(:phx_solid) <>
-      System.get_env("SPA_DIR") <> "index.html"
+    Path.join([
+      Application.app_dir(:phx_solid),
+      System.get_env("SPA_DIR"),
+      "index.html"
+    ])
   end
 
   @doc """
@@ -38,9 +41,11 @@ defmodule PhxSolidWeb.SPAController do
             read_line(l, file, token)
           end)
           |> then(fn file ->
-            conn
-            |> put_resp_content_type("text/html")
-            |> send_resp(200, file)
+            html(conn, file)
+
+            # conn
+            # |> put_resp_content_type("text/html")
+            # |> send_resp(200, file)
           end)
         rescue
           e ->

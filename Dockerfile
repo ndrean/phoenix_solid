@@ -79,7 +79,6 @@ COPY --from=asset-builder /front/dist /app/priv/static/spa
 
 COPY lib lib
 COPY assets assets
-# COPY front front
 
 # compile assets
 # RUN mix assets.deploy

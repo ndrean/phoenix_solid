@@ -1,10 +1,5 @@
 version: "3.9"
 
-# x-volumes: &service-volume
-#   - type: bind
-#     source: ./db
-#     target: /db
-
 x-web-app: &commun-web-app
   image: phx_solid
   depends_on:
@@ -25,10 +20,6 @@ networks:
 services:
   db:
     image: postgres:15.3-bullseye
-    # environment:
-    #   - POSTGRES_PASSWORD=postgres
-    #   - POSTGRES_DB=phx_solid_${MIX_ENV}
-    #   - POSTGRES_USER=postgres
     env_file:
       - .env-docker
     restart: always
@@ -51,12 +42,10 @@ services:
     depends_on:
       - db
     environment:
-      # - MIX_ENV=prod
+      - MIX_ENV=prod
       - LIVEBOOK_DISTRIBUTION=sname
       - LIVEBOOK_COOKIE=supersecret
       - LIVEBOOK_PASSWORD=securesecret
-      # - LIVEBOOK_NODE=livebook
-      - SECRET_KEY_BASE=HRPM+KVxrXtYiIni27wn1pXrNc/cl7wjHl/u5TWQxqZkuvJ6Q4NBF+WMUVUpQVIY
     hostname: livebook
     volumes:
       - ./data:/data/
@@ -75,40 +64,3 @@ services:
     hostname: app1
     ports:
       - "4001:4000"
-  # app0:
-  #   # build: .
-  #   image: phx_solid
-  #   # command: "start"
-  #   hostname: app0
-  #   depends_on:
-  #     - db
-  #   environment:
-  #     RELEASE_DISTRIBUTION: sname
-  #   #   RELEASE_NODE: "phx_solid@app0.mynet"
-  #   ports:
-  #     - "4000:4000"
-  #   env_file:
-  #     - .env-docker
-  #   networks:
-  #     - mynet
-  #   # volumes:
-  #   #   - ./db:/db
-
-  # app1:
-  #   # build: .
-  #   image: phx_solid
-  #   # command: "start_iex"
-  #   hostname: app1
-  #   depends_on:
-  #     - db
-  #   environment:
-  #     RELEASE_DISTRIBUTION: sname
-  #   #   RELEASE_NODE: "phx_solid@app1.mynet"
-  #   env_file:
-  #     - .env-docker
-  #   ports:
-  #     - "4001:4000"
-  #   networks:
-  #     - mynet
-  #   # volumes:
-  #   #   - ./db:/db

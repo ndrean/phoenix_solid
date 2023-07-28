@@ -1,6 +1,7 @@
 defmodule PhxSolidWeb.Router do
   import Phoenix.LiveView.Router
   use PhxSolidWeb, :router
+  # import Plug.Conn
 
   import PhxSolidWeb.UserAuth
 
@@ -11,6 +12,8 @@ defmodule PhxSolidWeb.Router do
   #        "connect-src https://accounts.google.com/gsi/;"
 
   # @csp "script-src https://accounts.google.com/gsi/client; frame-src https://accounts.google.com/gsi/; connect-src https://accounts.google.com/gsi/;"
+
+  @csp ""
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -23,24 +26,27 @@ defmodule PhxSolidWeb.Router do
     plug :put_secure_browser_headers
 
     plug :fetch_current_user
-    # plug(
-    #   :put_secure_browser_headers,
-    #   %{"content-security-policy-report-only" => @csp}
-    # )
+    plug :g_login
+
+    plug(
+      :put_secure_browser_headers,
+      %{"content-security-policy-report-only" => @csp}
+    )
   end
 
   pipeline :api do
     plug :accepts, ["json"]
-    post("/auth/one_tap", PhxSolidWeb.OneTapController, :handle)
+    post("/users/one_tap", PhxSolidWeb.OneTapController, :handle)
   end
 
   scope "/", PhxSolidWeb do
     pipe_through :browser
 
     get "/", PageController, :home
-    live "/welcome", WelcomeLive
-    get "/spa", SPAController, :index
     get "/fb_login", FbSdkController, :login
+    get "/users/oauth", GController, :login
+    get "/spa", SPAController, :index
+    live "/welcome", WelcomeLive, :new
   end
 
   # Other scopes may use custom stacks.
@@ -107,5 +113,13 @@ defmodule PhxSolidWeb.Router do
     conn
     |> assign(:meta_attrs, [])
     |> assign(:manifest, nil)
+  end
+
+  def g_login(conn, _) do
+    Plug.Conn.put_resp_header(
+      conn,
+      "cross-origin-opener-policy",
+      "same-origin-allow-popups"
+    )
   end
 end

@@ -24,7 +24,7 @@ defmodule PhxSolid.MixProject do
   def application do
     [
       mod: {PhxSolid.Application, []},
-      extra_applications: [:logger, :runtime_tools, :os_mon]
+      extra_applications: [:logger, :runtime_tools, :os_mon, :observer, :wx]
     ]
   end
 
@@ -49,6 +49,7 @@ defmodule PhxSolid.MixProject do
       {:swoosh, "~> 1.11"},
       {:hackney, "~> 1.9"},
       {:finch, "~> 0.16"},
+      {:req, "~> 0.3.0"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.20"},
@@ -56,6 +57,8 @@ defmodule PhxSolid.MixProject do
       {:joken, "~> 2.5"},
       {:plug_cowboy, "~> 2.5"},
       {:libcluster, "~> 3.3.3"},
+      # {:logfmt_ex, "~> 0.4"},
+      {:logster, "~> 2.0.0-rc.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},

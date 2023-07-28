@@ -11,7 +11,6 @@ defmodule PhxSolidWeb.LoginErrorController do
     |> fetch_session()
     |> fetch_flash()
     |> put_flash(:error, inspect(message))
-    # |> put_view(PhxSolidWeb.PageView)
     |> redirect(to: ~p"/")
     |> halt()
   end

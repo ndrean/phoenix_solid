@@ -70,6 +70,7 @@ config :phx_solid, PhxSolidWeb.Endpoint,
 config :phx_solid, dev_routes: true
 
 # Do not include metadata nor timestamps in development logs
+# config :logger, :console, format: {LogfmtEx, :format}
 config :logger, :console, format: "[$level] $message\n"
 
 # Set a higher stacktrace during development. Avoid configuring such

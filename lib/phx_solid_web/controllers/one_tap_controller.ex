@@ -6,10 +6,8 @@ defmodule PhxSolidWeb.OneTapController do
 
   def handle(conn, %{"credential" => jwt, "g_csrf_token" => g_csrf_token}) do
     with {:ok, %{email: email, name: name} = profile} <-
-           ElixirGoogleCerts.verified_identity(conn, jwt, g_csrf_token, PhxSolid.Finch) do
-      token = PhxSolid.Token.user_generate(email)
-
-      case SocialUser.create(%{email: email, name: name}) do
+           ElixirGoogleCerts.verified_identity(conn, jwt, g_csrf_token) do
+      case SocialUser.create(%{email: email, name: name, user_token: "0"}) do
         {:error, errors} ->
           conn
           |> fetch_session()
@@ -18,6 +16,7 @@ defmodule PhxSolidWeb.OneTapController do
           |> redirect(to: ~p"/")
 
         {:ok, user} ->
+          token = PhxSolid.Token.user_generate(email)
           {:ok, u} = SocialUser.update_token(%{id: user.id, user_token: token})
 
           conn

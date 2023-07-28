@@ -1,78 +1,132 @@
-<%!-- style="background-image: url('/images/rendering.png')" --%>
-<section class="bg-no-repeat bg-contain">
-  <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-start">
+<section class="min-h-screen flex items-center justify-center bg-[midnightblue]">
+  <div class="w-full max-w-md  p-8 rounded-lg shadow-md bg-gray-100">
+    <h2 class="text-2xl font-semibold mb-6 text-[midnightblue]">Login</h2>
     <%= if @current_user do %>
-      <li class="text-[0.8125rem] leading-6 text-zinc-900 border-1 rounded-3xl bg-{2473f2} text-white font-bold">
+      <div class="mb-4">
         <%= @current_user.email %>
-      </li>
-      <li>
+      </div>
+      <div class="mb-4">
         <.link
           href={~p"/users/settings"}
-          class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+          class="text-center block w-full bg-[bisque] hover:bg-orange-300 text-[midnightblue] font-semibold py-2 px-4 rounded-lg shadow-md"
         >
           Settings
         </.link>
-      </li>
-      <li>
+      </div>
+      <div class="mb-4">
         <.link
           href={~p"/users/log_out"}
           method="delete"
-          class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+          class="text-center block w-full bg-[bisque] hover:bg-orange-300 text-[midnightblue] font-semibold py-2 px-4 rounded-lg shadow-md"
         >
           Log out
         </.link>
-      </li>
+      </div>
+      <div class="mb-4">
+        <.link
+          href={~p"/welcome"}
+          class="text-center block w-full bg-[bisque] hover:bg-orange-300 text-[midnightblue] font-semibold py-2 px-4 rounded-lg shadow-md"
+        >
+          To the app!
+        </.link>
+      </div>
     <% else %>
-      <li>
+      <div class="mb-4">
         <.link
           href={~p"/users/register"}
-          class="text-[0.8125rem] leading-6  hover:text-zinc-700 border-1 p-2 text-base rounded-3xl bg-blue-500 text-white font-bold"
+          class="text-center block w-full bg-[bisque] hover:bg-orange-300 text-[midnightblue] font-semibold py-2 px-4 rounded-lg shadow-md"
         >
           Register
         </.link>
-      </li>
-      <li>
+      </div>
+      <div class="mb-4">
         <.link
           href={~p"/users/log_in"}
-          class="text-[0.8125rem] leading-6  hover:text-zinc-700 border-1 p-2 text-base rounded-3xl bg-blue-500 text-white font-bold"
+          class="text-center block w-full bg-[midnightblue] hover:bg-blue-700 text-[white] font-semibold py-2 px-4 rounded-lg shadow-md"
         >
-          Log in
+          Log in & Magic Link
         </.link>
-      </li>
-    <% end %>
-  </ul>
-  <br />
-  <script src="https://accounts.google.com/gsi/client" async defer>
-  </script>
-  <div
-    id="g_id_onload"
-    data-client_id={assigns[:g_client_id]}
-    data-context="signin"
-    data-ux_mode="popup"
-    data-login_uri=""
-    data-nonce=""
-    data-itp_support="true"
-  >
-  </div>
+      </div>
+      <br />
+      <!-- Google One-Tap Button -->
+      <h4 class="text-xl font-semibold mb-3 text-[midnightblue]">Google One Tap</h4>
+      <div class="flex items-center justify-center mt-4 mb-2">
+        <script src="https://accounts.google.com/gsi/client" async defer>
+        </script>
+        <div
+          id="g_id_onload"
+          data-client_id={@g_client_id}
+          data-context="signin"
+          data-ux_mode="popup"
+          data-login_uri={@location}
+          data-nonce=""
+        >
+        </div>
 
-  <div
-    class="g_id_signin"
-    data-type="standard"
-    data-shape="pill"
-    data-theme="filled_blue"
-    data-text="signin_with"
-    data-size="large"
-    data-logo_alignment="left"
-    data-width="300"
-  >
-  </div>
-  <br />
-  <script>
-    window.fb_app_id="<%= assigns[:fb_app_id] %>";
-  </script>
-  <div id="fb-root">
-    <button id="fb-btn" type="button">
-      <img width="250" alt="fb login" class="" src="/images/fb-login.png" />
-    </button>
+        <div
+          class="g_id_signin"
+          data-type="standard"
+          data-shape="pill"
+          data-theme="filled_blue"
+          data-text="signin_with"
+          data-size="large"
+          data-logo_alignment="left"
+          data-width="300"
+        >
+        </div>
+      </div>
+      <!-- Facebook SignIn Button -->
+      <h4 class="text-xl font-semibold mb-3 text-[midnightblue]">Facebook SDK</h4>
+      <div class="flex items-center justify-between mt-4">
+        <script>
+          window.fb_app_id="<%= assigns[:fb_app_id] %>"
+        </script>
+        <div id="fb-root">
+          <button id="fb-btn" type="button">
+            <img alt="fb login" class="w-fit hover:opacity-70" src="/images/fb-login.png" />
+          </button>
+        </div>
+      </div>
+      <h4 class="text-xl font-semibold mb-3 text-[midnightblue]">Google Web Backend Signin</h4>
+      <div class="flex items-center justify-between mt-4 hover:opacity-70">
+        <%!-- <div class="flex-col w-120"> --%>
+        <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" />
+        <.link
+          href={@g_oauth_url}
+          class="w-full inline-flex items-center min-h-50 bg-blue-600 font-roboto text-white text-3xl no-underline"
+        >
+          <div class="bg-white m-1 pt-4 pb-4 min-h-59 w-14 justify-center items-center ">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 533.5 544.3"
+              width="52px"
+              height="35"
+              class="inline-flex items-center"
+            >
+              <path
+                d="M533.5 278.4c0-18.5-1.5-37.1-4.7-55.3H272.1v104.8h147c-6.1 33.8-25.7 63.7-54.4 82.7v68h87.7c51.5-47.4 81.1-117.4 81.1-200.2z"
+                fill="#4285f4"
+              />
+              <path
+                d="M272.1 544.3c73.4 0 135.3-24.1 180.4-65.7l-87.7-68c-24.4 16.6-55.9 26-92.6 26-71 0-131.2-47.9-152.8-112.3H28.9v70.1c46.2 91.9 140.3 149.9 243.2 149.9z"
+                fill="#34a853"
+              />
+              <path
+                d="M119.3 324.3c-11.4-33.8-11.4-70.4 0-104.2V150H28.9c-38.6 76.9-38.6 167.5 0 244.4l90.4-70.1z"
+                fill="#fbbc04"
+              />
+              <path
+                d="M272.1 107.7c38.8-.6 76.3 14 104.4 40.8l77.7-77.7C405 24.6 339.7-.8 272.1 0 169.2 0 75.1 58 28.9 150l90.4 70.1c21.5-64.5 81.8-112.4 152.8-112.4z"
+                fill="#ea4335"
+              />
+            </svg>
+          </div>
+          <div class="ml-3 mr-3">Sign in with Google</div>
+        </.link>
+        <%!-- </div> --%>
+      </div>
+    <% end %>
   </div>
 </section>
+
+<%!-- class="text-[0.8125rem] leading-6  hover:text-zinc-700 border-1 p-2 text-base rounded-3xl bg-blue-500 text-white font-bold" --%>

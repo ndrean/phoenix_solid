@@ -6,6 +6,10 @@ defmodule PhxSolidWeb.UserAuth do
 
   alias PhxSolid.Accounts
 
+  @moduledoc """
+  The Plug to control authnetication and authorization
+  """
+
   # Make the remember me cookie valid for 60 days.
   # If you want bump or reduce this value, also change
   # the token expiry itself in UserToken.
@@ -16,14 +20,11 @@ defmodule PhxSolidWeb.UserAuth do
   @doc """
   Logs the user in.
 
-  It renews the session ID and clears the whole session
-  to avoid fixation attacks. See the renew_session
-  function to customize this behaviour.
+  It renews the session ID and clears the whole session to avoid fixation attacks.
+  See the renew_session function to customize this behaviour.
 
-  It also sets a `:live_socket_id` key in the session,
-  so LiveView sessions are identified and automatically
-  disconnected on log out. The line can be safely removed
-  if you are not using LiveView.
+  It also sets a `:live_socket_id` key in the session, so LiveView sessions are identified and automatically
+  disconnected on log out. The line can be safely removed if you are not using LiveView.
   """
   def log_in_user(conn, user, params \\ %{}) do
     token = Accounts.generate_user_session_token(user)
