@@ -36,7 +36,10 @@ defmodule PhxSolidWeb.GController do
   def login(conn, %{"code" => code, "state" => state} = _params) do
     redirect_if_bad_state(conn, state)
 
-    with {:ok, profile} <- ElixirGoogleAuth.get_checked_profile(code),
+    g_oauth_redirect_url =
+      fetch_session(conn) |> get_session(:g_oauth_redirect_url)
+
+    with {:ok, profile} <- ElixirGoogleAuth.get_checked_profile(g_oauth_redirect_url, code),
          true <-
            ElixirGoogleCerts.check_iss(profile["iss"]) &&
              ElixirGoogleCerts.check_user(profile["aud"], profile["azd"]) do
@@ -66,5 +69,10 @@ defmodule PhxSolidWeb.GController do
           |> redirect(to: ~p"/welcome")
       end
     end
+  end
+
+  def handle(conn, params) do
+    params |> dbg()
+    conn
   end
 end

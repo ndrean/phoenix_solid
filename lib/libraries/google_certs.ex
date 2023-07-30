@@ -1,47 +1,87 @@
 defmodule ElixirGoogleCerts do
   @moduledoc """
-  Elixir module to use decipher the ID_token and use the Google One tap.
-  It follows the Google SignIn model with the deciphering against Google Certs,
+  Elixir module to use Google One tap from a controller.
+  It follows the Google SignIn model with the deciphering against Google public keys, a nonce,
   a double CSRF check, the "iss" check and the "aud" check.
 
-  It exposes the functions
+  It exposes the following functions:
 
-      ElixirGoogleCerts.verified_identity(conn, jwt, g_csrf_token)
+      ElixirGoogleCerts.verified_identity(%{cookie, jwt, g_csrf_token, g_nonce})
       ElixirGoogleCerts.check_identity_v1(jwt)
+      ElixirGoogleCerts.check_identity_v3(jwt)
       ElixirGoogleCerts.check_user(aud, azp)
       ElixirGoogleCerts.check_iss(iss)
 
   You can use PEM or JWK endpoints. By default, it uses the PEM (v1) endpoint (auth_provider_x509_cert_url).
 
   ## Example
-  You define a POST route and the corresopnding controller:
 
-      # POST /callback_url_one_tap :handle
-      def handle(conn, %{"credential" => jwt, "g_csrf_token" => g_csrf_token}) do
-        case ElixirGoogleCerts.verified_identity(conn, jwt, g_csrf_token) do
-          {:ok, %{email: email, name: name} = profile} -> ...
-
-  For the HTML part, you can get the HTML with Google's [code generator](https://developers.google.com/identity/gsi/web/tools/configurator).
-
-  You need to fill in the `data-login_uri={@cb_url}` in the HTML where the assign `location` is the
-  absolute POST route to which Google will send a response.
-
-  You also need to pass the env. variable `GOOGLE_CLIENT_ID` into the assigns to populate
-  the dataset `data-client_id={@g_client_id}`,
-
-  In the login page controller:
-
-      cb_url_one_tap =
-        Path.join(
-          MyApp.Endpoint.url(),
-          Application.get_env(:my_app, :g_certs_cb_path)
-        ))
-      assign(conn, :cb_url, cb_url_one_tap)
-      assign(conn, :g_client_id, System.get_env("GOOGLE_CLIENT_ID"))
-
-  You need to inject the following on each page where you need a Google One Tap:
+  You insert HTML part in your login page. It is composed of a script tag and HTML. The script is:
 
        <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  You can get the HTML with Google's [code generator](https://developers.google.com/identity/gsi/web/tools/configurator).
+
+  You populate this HTML rendered from your login page controller with the following assigns:
+
+  - `data-nonce={@g_nonce}` as per <https://developers.google.com/identity/gsi/web/reference/html-reference#data-nonce>
+  - `data-client_id={@g_client_id}` as per <https://developers.google.com/identity/gsi/web/reference/html-reference#data-client_id>
+  - `data-login_uri={@location}` as per <https://developers.google.com/identity/gsi/web/reference/html-reference#data-login_uri>
+
+
+  You generate a nonce and save it in the session. For example, you can use:
+
+      g_nonce = Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false)
+
+  You pass the env. variable `GOOGLE_CLIENT_ID` (or from the config) as the assign `g_client_id`.
+
+  The `location` assign is the absolute URL for google to POST a response to your app. It is used in _three_
+  places:
+  - passed to Google via the config (or env. variable, see set up below)
+  - in your router as a POST endpoint.
+  - in the project set up in the Google library API
+
+
+  The router:
+
+      #router.ex
+      pipeline :api do
+        plug :accepts, ["json"]
+        post("/users/one_tap", MyAppdWeb.OneTapController, :handle)
+
+  The login controller renders the Google One Tap button. You generate a cryptic token "g_nonce".
+
+      #login_controller.ex
+      def login(conn, _) do
+
+        g_nonce =  Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false)
+
+        location =
+          Path.join(
+            MyApp.Endpoint.url(),
+            Application.get_env(:my_app, :g_certs_cb_path)
+          )
+        ...
+        conn
+        |> fetch_session()
+        |> put_session(:g_nonce, g_nonce)
+        |> assign(conn, :location, location)
+        |> assign(conn, :g_client_id, System.get_env("GOOGLE_CLIENT_ID"))
+        ...
+      end
+
+  The callback controller receives the response posted by Google and returns the profile if successful.
+
+      # POST /users/one_tap :handle
+      def handle(conn, %{"credential" => jwt, "g_csrf_token" => g_csrf_token}) do
+        case ElixirGoogleCerts.verified_identity(%{
+            cookie: cookie,
+            jwt: jwt,
+            g_csrf_token: g_csrf_token,
+            g_nonce: g_nonce
+          }) do
+        {:ok, %{email: email, name: name} = profile} -> ...
+
 
   ## Dependencies:
 
@@ -49,12 +89,16 @@ defmodule ElixirGoogleCerts do
 
   ## Configuration
 
-  Set up the env variable:
+  Set up the env variables or a config:
 
+      #.env
       GOOGLE_CLIENT_ID.
 
-  Set up the callback path config:
-      config :my_app, :g_certs_cb_path, "/path_to_one_tap_cb"
+      #config.exs
+      config :my_app,
+        g_certs_cb_path: "/users/one_tap",
+        g_client_id: System.get_env("GOOGLE_CLIENT_ID")
+        g_client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
 
   """
 
@@ -75,8 +119,8 @@ defmodule ElixirGoogleCerts do
       end
 
   """
-  def verified_identity(conn, jwt, g_csrf_token) do
-    with :ok <- double_token_check(conn, g_csrf_token),
+  def verified_identity(%{cookie: cookie, jwt: jwt, g_csrf_token: g_csrf_token, g_nonce: g_nonce}) do
+    with true <- double_token_check(cookie, g_csrf_token),
          {:ok,
           %{
             "aud" => aud,
@@ -86,10 +130,13 @@ defmodule ElixirGoogleCerts do
             "name" => name,
             "picture" => pic,
             "given_name" => given_name,
-            "sub" => sub
-          }} <- check_identity_v1(jwt),
+            "sub" => sub,
+            "nonce" => nonce
+          }} <-
+           check_identity_v1(jwt),
          true <- check_user(aud, azp),
-         true <- check_iss(iss) do
+         true <- check_iss(iss),
+         true <- check_nonce(nonce, g_nonce) do
       {:ok, %{email: email, name: name, google_id: sub, picture: pic, given_name: given_name}}
     else
       {:error, msg} -> {:error, msg}
@@ -108,6 +155,7 @@ defmodule ElixirGoogleCerts do
             {true, %{fields: fields}, _} =
               body
               |> Jason.decode!()
+              # |> Jsonrs.decode!()
               |> Map.get(kid)
               |> JOSE.JWK.from_pem()
               |> JOSE.JWT.verify_strict([alg], jwt)
@@ -129,6 +177,7 @@ defmodule ElixirGoogleCerts do
         case fetch(@g_certs3_url) do
           {:ok, %{body: body}} ->
             %{"keys" => certs} = Jason.decode!(body)
+            # %{"keys" => certs} = Jsonrs.decode!(body)
             cert = Enum.find(certs, fn cert -> cert["kid"] == kid end)
             signer = Joken.Signer.create(alg, cert)
             Joken.verify(jwt, signer, [])
@@ -151,19 +200,11 @@ defmodule ElixirGoogleCerts do
   end
 
   # token in body is equal to received cookie
-  defp double_token_check(conn, g_csrf_token) do
-    case conn.cookies do
-      %{"g_csrf_token" => g_cookie} ->
-        if g_cookie == g_csrf_token,
-          do: :ok,
-          else: {:error, "Failed to verify double submit cookie."}
-
-      _ ->
-        {:error, "No cookie"}
-    end
-  end
+  def double_token_check(cookie, g_csrf_token), do: cookie === g_csrf_token
 
   # ---- Google post-checking recommendations
+  def check_nonce(nonce, g_nonce), do: nonce === g_nonce
+
   @doc """
   Confirm the Google_Client_ID
   """

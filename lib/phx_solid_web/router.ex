@@ -13,7 +13,9 @@ defmodule PhxSolidWeb.Router do
 
   # @csp "script-src https://accounts.google.com/gsi/client; frame-src https://accounts.google.com/gsi/; connect-src https://accounts.google.com/gsi/;"
 
-  @csp ""
+  @hostname "http://localhost:4000"
+  @csp "script-src 'nonce-f35697c2-bf93-418e-a119-8158c69a2b3a' 'nonce-0bce0d28-93ad-4f3e-9f3f-c1057b0e71b3' https://accounts.google.com/gsi/client https://connect.facebook.net/en_US/sdk.js https 'self';frame-src https://accounts.google.com/gsi/ 'self';connect-src https://accounts.google.com/gsi/   https://www.facebook.com/ 'self' wss;"
+  # report-uri http://localhost:4000/csp-report;"
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -27,16 +29,21 @@ defmodule PhxSolidWeb.Router do
 
     plug :fetch_current_user
     plug :g_login
+    plug :redirect_path
 
     plug(
       :put_secure_browser_headers,
-      %{"content-security-policy-report-only" => @csp}
+      %{
+        "content-security-policy-report-only" => @csp,
+        "cross-origin-opener-policy" => "same-origin-allow-popups"
+      }
     )
   end
 
   pipeline :api do
-    plug :accepts, ["json"]
+    plug :accepts, ["json", "html"]
     post("/users/one_tap", PhxSolidWeb.OneTapController, :handle)
+    post "/csp-report", PhxSolidWeb.CspReport, :display
   end
 
   scope "/", PhxSolidWeb do
@@ -121,5 +128,18 @@ defmodule PhxSolidWeb.Router do
       "cross-origin-opener-policy",
       "same-origin-allow-popups"
     )
+  end
+
+  def redirect_path(conn, _) do
+    redir_url =
+      %URI{
+        scheme: conn.scheme |> Atom.to_string(),
+        port: conn.port,
+        host: :inet.ntoa(conn.remote_ip) |> IO.iodata_to_binary(),
+        path: Application.get_env(Application.get_application(__MODULE__), :g_certs_cb_path)
+      }
+      |> URI.to_string()
+
+    assign(conn, :redi_url, redir_url)
   end
 end

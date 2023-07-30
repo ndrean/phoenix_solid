@@ -14,8 +14,15 @@ config :phx_solid,
   ecto_repos: [PhxSolid.Repo]
 
 config :phx_solid,
-  g_auth_ctrl_path: "/users/oauth",
-  g_certs_cb_path: "/users/one_tap"
+  g_auth_uri: "/users/oauth",
+  g_cb_uri: "/users/one_tap"
+
+config :plug_content_security_policy,
+  report_only: true,
+  directives: %{
+    report_uri: "/csp-violation-report-endpoint/"
+  },
+  nonces_for: [:script_src]
 
 # config :phx_solid, PhxSolid.Repo,
 #   database_url: System.get_env("DATABASE_URL"),
@@ -73,8 +80,8 @@ config :logger, :console,
   metadata: [:request_id]
 
 # Use Jason for JSON parsing in Phoenix
-config :phoenix, json_library: Jason
-
+# config :phoenix, json_library: Jason
+config :phoenix, json_library: Jsonrs
 # logger: false
 
 # config :logster, formatter: :json

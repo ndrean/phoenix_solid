@@ -7,22 +7,44 @@ defmodule PhxSolidWeb.PageController do
   """
 
   def home(conn, _params) do
-    cb_url_one_tap =
+    hostname =
+      PhxSolidWeb.Endpoint.url()
+
+    # for One Tap
+    g_nonce = Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false)
+
+    # URL for One Tap
+    location =
       Path.join(
-        PhxSolidWeb.Endpoint.url(),
-        Application.get_application(__MODULE__) |> Application.get_env(:g_certs_cb_path)
+        hostname,
+        Application.get_application(__MODULE__) |> Application.get_env(:g_cb_uri)
       )
 
-    g_state = Base.url_encode64(:crypto.strong_rand_bytes(32))
-    g_oauth_url = ElixirGoogleAuth.generate_oauth_url(g_state)
+    # for SignIn
+    g_state = Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false)
+
+    # URL for SignIn
+    g_oauth_redirect_url =
+      Path.join(
+        hostname,
+        Application.get_application(__MODULE__) |> Application.get_env(:g_auth_uri)
+      )
+
+    # redirect URL
+    g_oauth_url =
+      ElixirGoogleAuth.generate_oauth_url(g_oauth_redirect_url, g_state, %{hl: "it"})
 
     conn
+    |> dbg()
     |> fetch_session()
     |> put_session(:g_state, g_state)
+    |> put_session(:g_oauth_redirect_url, g_oauth_redirect_url)
+    |> put_session(:g_nonce, g_nonce)
     |> assign(:fb_app_id, System.get_env("FACEBOOK_APP_ID"))
     |> assign(:g_client_id, System.get_env("GOOGLE_CLIENT_ID"))
     |> assign(:g_oauth_url, g_oauth_url)
-    |> assign(:location, cb_url_one_tap)
+    |> assign(:g_scr_nonce, g_nonce)
+    |> assign(:location, location)
     |> render(:home)
   end
 end

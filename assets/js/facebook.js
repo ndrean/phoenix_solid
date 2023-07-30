@@ -14,7 +14,7 @@ export function Facebook(fbutton) {
   window.fbAsyncInit = (function () {
     fbutton.addEventListener("click", () => {
       FB.init({
-        appId: `${window.fb_app_id}`,
+        appId: window.fb_app_id,
         cookie: true,
         xfbml: false,
         version: "v17.0",

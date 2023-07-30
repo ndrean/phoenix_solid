@@ -43,11 +43,3 @@ if (fbutton) Facebook(fbutton);
 
 const online = document.getElementById("online");
 if (online) onlineStatus(online);
-
-// const btn = document.getElementById("btnDiv");
-// if (btn) {
-//   console.log(btn);
-//   const div = document.createElement("div");
-//   div.classList.add("g-signin2");
-//   div.dataset.onsuccess = "onSignIn";
-// }

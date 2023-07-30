@@ -23,7 +23,6 @@ defmodule PhxSolidWeb.WelcomeLive do
       "profile" => profile,
       "logs" => logs,
       "origin" => origin
-      # "g_client_id" => g_client_id
     } =
       session
 
@@ -37,9 +36,7 @@ defmodule PhxSolidWeb.WelcomeLive do
        profile: profile,
        origin: origin,
        logs: logs
-       #  g_client_id: g_client_id
      )}
-    |> dbg()
   end
 
   # the event of changing the url is captured with handle_params
@@ -48,13 +45,15 @@ defmodule PhxSolidWeb.WelcomeLive do
     base = "flex items-center border rounded-md p-2 mr-2"
     styled = "bg-[bisque] text-[midnightblue]"
 
-    view =
-      case map_size(qstring) do
-        0 -> "#profile"
-        _ -> "#" <> Map.get(qstring, "display")
-      end
+    active = fn current ->
+      view =
+        case map_size(qstring) do
+          0 -> "#profile"
+          _ -> "#" <> Map.get(qstring, "display")
+        end
 
-    active = fn current -> [base, current === view && styled] end
+      [base, current === view && styled]
+    end
 
     display = fn current ->
       @nav_elts

@@ -2,17 +2,24 @@ defmodule PhxSolidWeb.SPAController do
   use PhxSolidWeb, :controller
   require Logger
 
-  @title "    <title>Solid App</title>\n"
+  @title "<title>Solid App</title>"
 
   defp read_line(:eof, file, _token), do: file
 
-  defp read_line(@title, file, token) do
-    file <> @title <> token
+  defp read_line(curr, file, token) do
+    case String.trim(curr) do
+      @title ->
+        file <> @title <> token
+
+      curr ->
+        file <> curr
+    end
   end
 
-  defp read_line(curr, file, _token), do: file <> curr
-
-  defp index_html do
+  @doc """
+  Builds the full path to the spa "index.html" file
+  """
+  def index_html do
     # line below for the release
     Path.join([
       Application.app_dir(:phx_solid),
@@ -29,24 +36,23 @@ defmodule PhxSolidWeb.SPAController do
       true ->
         %{"user_token" => user_token} = get_session(conn)
 
-        token =
-          "<script nonce='ut'>window.userToken = \"#{user_token}\"</script>\n"
+        nonce =
+          :crypto.strong_rand_bytes(32)
+          |> Base.url_encode64(padding: false)
 
-        Logger.info("------------------->>> #{inspect(PhxSolidWeb.Endpoint.url())}")
+        token =
+          ~s(<script nonce="#{nonce}">window.userToken="#{user_token}"</script>\n)
 
         try do
           index_html()
           |> File.stream!([], :line)
-          |> Enum.reduce("", fn l, file ->
-            read_line(l, file, token)
-          end)
-          |> then(fn file ->
-            html(conn, file)
+          |> Enum.reduce("", &read_line(&1, &2, token))
+          |> then(&Phoenix.Controller.html(conn, &1))
 
-            # conn
-            # |> put_resp_content_type("text/html")
-            # |> send_resp(200, file)
-          end)
+          # conn
+          # |> put_resp_content_type("text/html")
+          # |> send_resp(200, file)
+          # end)
         rescue
           e ->
             Logger.error("#{__MODULE__}: #{inspect(e.reason)}")

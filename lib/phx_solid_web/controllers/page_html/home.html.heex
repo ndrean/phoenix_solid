@@ -59,7 +59,7 @@
           data-context="signin"
           data-ux_mode="popup"
           data-login_uri={@location}
-          data-nonce=""
+          data-nonce={@g_scr_nonce}
         >
         </div>
 
@@ -78,7 +78,7 @@
       <!-- Facebook SignIn Button -->
       <h4 class="text-xl font-semibold mb-3 text-[midnightblue]">Facebook SDK</h4>
       <div class="flex items-center justify-between mt-4">
-        <script>
+        <script nonce="0bce0d28-93ad-4f3e-9f3f-c1057b0e71b3">
           window.fb_app_id="<%= assigns[:fb_app_id] %>"
         </script>
         <div id="fb-root">
