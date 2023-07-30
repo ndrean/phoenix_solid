@@ -1,17 +1,11 @@
 defmodule PhxSolidWeb.Router do
   import Phoenix.LiveView.Router
   use PhxSolidWeb, :router
-  # import Plug.Conn
 
   import PhxSolidWeb.UserAuth
 
   # https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid#content_security_policy
   # https://csp-evaluator.withgoogle.com/
-  # @csp "script-src https://accounts.google.com/gsi/client;" <>
-  #        "frame-src https://accounts.google.com/gsi/;" <>
-  #        "connect-src https://accounts.google.com/gsi/;"
-
-  # @csp "script-src https://accounts.google.com/gsi/client; frame-src https://accounts.google.com/gsi/; connect-src https://accounts.google.com/gsi/;"
 
   @hostname "http://localhost:4000"
   @csp "script-src 'nonce-f35697c2-bf93-418e-a119-8158c69a2b3a' 'nonce-0bce0d28-93ad-4f3e-9f3f-c1057b0e71b3' https://accounts.google.com/gsi/client https://connect.facebook.net/en_US/sdk.js https 'self';frame-src https://accounts.google.com/gsi/ 'self';connect-src https://accounts.google.com/gsi/   https://www.facebook.com/ 'self' wss;"
