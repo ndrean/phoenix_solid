@@ -3,19 +3,9 @@ defmodule PhxSolid.Accounts.UserNotifier do
 
   alias PhxSolid.Mailer
 
-  def deliver_magic_link(user, url) do
-    deliver(user.email, "Sign in to MagicLink", """
-    ==============================
-    Hi #{user.email},
-
-    Please use this link to sign in:
-
-    <a href=#{url}>Please click here</a>
-
-    If you didn't request this email, feel free to ignore this.
-    ==============================
-    """)
-  end
+  @moduledoc """
+  Generate user mails
+  """
 
   # Delivers the email using the application mailer.
   defp deliver(recipient, subject, body) do
@@ -29,6 +19,29 @@ defmodule PhxSolid.Accounts.UserNotifier do
     with {:ok, _metadata} <- Mailer.deliver(email) do
       {:ok, email}
     end
+  end
+
+  @doc """
+  Delivers a magic link.
+  """
+  def deliver_magic_link(user, url) do
+    deliver(
+      user.email,
+      "MagickLink to Sign in to #{Application.get_application(__MODULE__)}, the #{DateTime.utc_now() |> DateTime.to_string()}",
+      """
+      ==============================
+
+      Hi #{user.email},
+
+      Please use this link to sign in:
+
+      <a href=#{url}>Please click here</a>
+
+      If you didn't request this email, feel free to ignore this.
+
+      ==============================
+      """
+    )
   end
 
   @doc """

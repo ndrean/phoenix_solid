@@ -3,7 +3,7 @@ defmodule PhxSolidWeb.CspReport do
   require Logger
 
   def display(conn, report) do
-    Logger.debug("#{inspect(report)}")
-    render(conn, %{err: inspect(report)})
+    Logger.warning("#{inspect(report)}")
+    json(conn, %{err: inspect(report)})
   end
 end

@@ -8,6 +8,8 @@ defmodule PhxSolidWeb.UserSessionController do
     case Accounts.get_user_by_email_token(token, "magic_link") do
       %Accounts.User{} = user ->
         conn
+        |> fetch_session()
+        |> fetch_flash()
         |> put_flash(:info, "Welcome back!")
         |> UserAuth.log_in_user(user)
 
@@ -20,11 +22,16 @@ defmodule PhxSolidWeb.UserSessionController do
 
   def create(conn, %{"_action" => "magic_link"} = params) do
     %{"user" => %{"email" => email}} = params
-    IO.puts("________mail")
 
     if user = Accounts.get_user_by_email(email) do
-      IO.puts("#{inspect(user)}")
-      magic_link_url_fun = &"#{PhxSolidWeb.Endpoint.url()}/users/log_in/#{&1}"
+      magic_link_url_fun = fn token ->
+        PhxSolidWeb.Endpoint.url()
+        |> URI.new!()
+        |> URI.append_path("/users/log_in")
+        |> URI.append_path("/#{token}")
+      end
+
+      # magic_link_url_fun = &"#{PhxSolidWeb.Endpoint.url()}/users/log_in/#{&1}"
       Accounts.deliver_magic_link(user, magic_link_url_fun)
     end
 
@@ -44,6 +51,7 @@ defmodule PhxSolidWeb.UserSessionController do
     |> create(params, "Password updated successfully!")
   end
 
+  # user_login
   def create(conn, params) do
     create(conn, params, "Welcome back!")
   end

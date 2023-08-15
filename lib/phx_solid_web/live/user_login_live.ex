@@ -4,7 +4,7 @@ defmodule PhxSolidWeb.UserLoginLive do
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-sm">
+    <div class="mx-auto max-w-sm bg-white">
       <.header class="text-center">
         Sign in to account
         <:subtitle>
@@ -16,9 +16,22 @@ defmodule PhxSolidWeb.UserLoginLive do
         </:subtitle>
       </.header>
 
-      <.simple_form for={@form} id="login_form" action={~p"/users/log_in"} phx-update="ignore">
-        <.input field={@form[:email]} type="email" label="Email" required />
-        <.input field={@form[:password]} type="password" label="Password" required />
+      <.simple_form
+        for={@form}
+        method="post"
+        id="login_form"
+        action={~p"/users/log_in"}
+        phx-update="ignore"
+      >
+        <.input
+          field={@form[:email]}
+          type="email"
+          label="Email"
+          required
+          autocomplete
+          phx-debounce="blur"
+        />
+        <.input field={@form[:password]} type="password" autocomplete label="Password" required />
 
         <:actions>
           <.input field={@form[:remember_me]} type="checkbox" label="Keep me logged in" />
@@ -58,6 +71,8 @@ defmodule PhxSolidWeb.UserLoginLive do
   end
 
   def mount(_params, _session, socket) do
+    # params._csrf_token is passed to the hidden input of the form
+
     email = live_flash(socket.assigns.flash, :email)
     form = to_form(%{"email" => email}, as: "user")
 

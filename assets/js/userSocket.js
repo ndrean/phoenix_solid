@@ -1,8 +1,8 @@
 import { Socket } from "phoenix";
 
-let socket = new Socket("/socket", {
-  params: { token: window.userToken },
+const socket = new Socket("/socket", {
+  params: { token: window.userPhxToken },
 });
-if (window.userToken) socket.connect();
+if (window.userPhxToken) socket.connect();
 
 export default socket;

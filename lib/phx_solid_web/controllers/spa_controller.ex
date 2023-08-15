@@ -35,10 +35,7 @@ defmodule PhxSolidWeb.SPAController do
     case Map.has_key?(get_session(conn), "user_token") do
       true ->
         %{"user_token" => user_token} = get_session(conn)
-
-        nonce =
-          :crypto.strong_rand_bytes(32)
-          |> Base.url_encode64(padding: false)
+        nonce = PhxSolid.gen_secret()
 
         token =
           ~s(<script nonce="#{nonce}">window.userToken="#{user_token}"</script>\n)

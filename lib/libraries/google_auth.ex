@@ -123,24 +123,18 @@ defmodule ElixirGoogleAuth do
 
   Configure the path to the controller in "config.exs" or as env. variable.
 
-      config :my_app, :g_auth_ctrl_path, "my_ctrl_path"
-      # or env. variable
-      G_AUTH_CTRL_PATH
+      config :my_app, :g_oauth_uri, "my_ctrl_path"
+      # or an env. variable
+      G_OAUTH_URI
 
-  Configure the headers
+  Configure the CSP in the router pipeline
 
-      def g_login(conn, _) do
-        Plug.Conn.put_resp_header(
-          conn,
-          "cross-origin-opener-policy",
-          "same-origin-allow-popups"
-        )
-      end
-
-  In the `pipeline :browser`, add `plug :g_login`
+        plug :put_secure_browser_headers
+          %{"cross-origin-opener-policy", "same-origin-allow-popups"}
 
   """
 
+  @json_lib Phoenix.json_library()
   @g_auth_base_url "https://accounts.google.com/o/oauth2/v2/auth?"
   @g_token_url "https://oauth2.googleapis.com/token"
   @scope "openid profile email"
@@ -149,7 +143,7 @@ defmodule ElixirGoogleAuth do
   Creates the Google OAuth2 URL with "client_id", "scope" and "redirect_uri".
   This is the URL you need to inject in your "Login with Google" button.
   """
-  def generate_oauth_url(aouth_redirect_url, state, opts \\ %{}) do
+  def generate_oauth_url(oauth_redirect_url, state, opts \\ %{}) do
     url_with_query_string(
       @g_auth_base_url,
       %{
@@ -159,7 +153,7 @@ defmodule ElixirGoogleAuth do
         include_granted_scopes: true,
         prompt: "consent",
         access_type: "offline",
-        redirect_uri: aouth_redirect_url,
+        redirect_uri: oauth_redirect_url,
         state: state
       }
       |> Map.merge(opts)
@@ -171,7 +165,7 @@ defmodule ElixirGoogleAuth do
   """
   def get_checked_profile(aouth_redirect_uri, code) do
     body =
-      Jason.encode!(%{
+      @json_lib.encode!(%{
         client_id: google_client_id(),
         client_secret: google_client_secret(),
         redirect_uri: aouth_redirect_uri,
@@ -181,7 +175,7 @@ defmodule ElixirGoogleAuth do
 
     with {:ok, %{"id_token" => jwt} = _body} <- http_post(@g_token_url, body),
          {:ok, profile} <- ElixirGoogleCerts.check_identity_v1(jwt) do
-      {:ok, profile}
+      {:ok, Map.new(profile, fn {k, v} -> {String.to_atom(k), v} end)}
     else
       {:error, reason} -> {:error, reason}
     end
@@ -195,9 +189,10 @@ defmodule ElixirGoogleAuth do
   def http_post(url, body) do
     case :httpc.request(:post, {~c"#{url}", [], ~c"application/json", body}, [], []) do
       {:ok, {{_, 200, _}, _headers, body}} ->
-        {:ok, Jason.decode!(body)}
+        {:ok, @json_lib.decode!(body)}
 
-      # {:ok, Jsonrs.decode!(body)}
+      {:ok, {{_, 400, _reason}, _, response}} ->
+        {:error, @json_lib.decode!(response)}
 
       {:error, reason} ->
         {:error, reason}

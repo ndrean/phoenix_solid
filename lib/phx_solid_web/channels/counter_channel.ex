@@ -5,7 +5,7 @@ defmodule PhxSolidWeb.CounterChannel do
 
   @impl true
   def join("counter:visits", _payload, socket) do
-    init_count = Counter.update()
+    init_count = Counter.update_counter_by_one(socket.assigns.id)
     send(self(), {:init, init_count})
     {:ok, socket}
   end

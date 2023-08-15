@@ -2,6 +2,9 @@ defmodule PhxSolid.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @moduledoc """
+  Manages the User
+  """
   schema "users" do
     field :email, :string
     field :password, :string, virtual: true, redact: true

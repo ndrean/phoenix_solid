@@ -2,7 +2,7 @@ import { onCleanup } from "solid-js";
 
 export default function useChannel(socket, topic) {
   if (!socket) return null;
-  const channel = socket.channel(topic, { user_token: window.userToken });
+  const channel = socket.channel(topic, { user_token: window.userPhxToken });
   channel
     .join()
     .receive("ok", () => {

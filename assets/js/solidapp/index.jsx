@@ -37,7 +37,7 @@ function app(ctx) {
   const Home = lazy(() => import("./Home"));
   const Comp1 = lazy(() => import("./Comp1"));
   const Comp2 = lazy(() => import("./Comp2"));
-  return (props) => (
+  return (_props) => (
     <Router>
       <Nav>
         <A activeClass={active} inactiveClass={inactive} end href="/">

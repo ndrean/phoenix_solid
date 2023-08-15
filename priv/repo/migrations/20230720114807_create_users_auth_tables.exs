@@ -21,5 +21,12 @@ defmodule PhxSolid.Repo.Migrations.CreateUsersAuthTables do
 
     create index(:users_tokens, [:user_id])
     create unique_index(:users_tokens, [:context, :token])
+
+    create_if_not_exists table("counter") do
+      add(:count, :integer)
+      add :logs, :integer, default: 1
+      add :user_id, references(:users, on_delete: :delete_all), null: false
+      timestamps()
+    end
   end
 end

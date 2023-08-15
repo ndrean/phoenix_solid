@@ -6,7 +6,7 @@ defmodule ElixirGoogleCerts do
 
   It exposes the following functions:
 
-      ElixirGoogleCerts.verified_identity(%{cookie, jwt, g_csrf_token, g_nonce})
+      ElixirGoogleCerts.verified_identity(%{jwt, g_nonce})
       ElixirGoogleCerts.check_identity_v1(jwt)
       ElixirGoogleCerts.check_identity_v3(jwt)
       ElixirGoogleCerts.check_user(aud, azp)
@@ -72,8 +72,13 @@ defmodule ElixirGoogleCerts do
 
   The callback controller receives the response posted by Google and returns the profile if successful.
 
+  You use a plug `:check_csrf` to check if the emitted csrf saved in `conn.cookies` is equal to the one received in body
+  of the HTTP POST request.
+
+
       # POST /users/one_tap :handle
-      def handle(conn, %{"credential" => jwt, "g_csrf_token" => g_csrf_token}) do
+      plug :check_csrf
+      def handle(conn, %{"credential" => jwt) do
         case ElixirGoogleCerts.verified_identity(%{
             cookie: cookie,
             jwt: jwt,
@@ -106,90 +111,80 @@ defmodule ElixirGoogleCerts do
   @g_certs3_url "https://www.googleapis.com/oauth2/v3/certs"
   @iss "https://accounts.google.com"
 
+  @json_lib Phoenix.json_library()
+
+  # Application.compile_env(:phoenix, :json_library)
+
   @doc """
-  Takes the conn, the JWT token, the g_csrf_token returned by Google as params to the POST endpoint.
-  It renders `{:ok, profil}` or `{:error, reason}`.
+  This is run after the plug "check_csrf".
 
-  ## Example
+  It takes a map with the JWT token and a nonce. It checks that
+  the received nonce is equal to the emitted one, and deciphers the JWT
+  against Google public key (PEM or JWK).
 
-      iex> def handle(conn, %{"credential" => jwt, "g_csrf_token" => g_csrf_token}) do
-      with {:ok, profile} <- ElixirGoogleCerts.verified_identity(conn, jwt, g_csrf_token) do
-          %{email: email, name: _name, google_id: _sub, picture: _pic} = profile
-          ...
-      end
 
+        ElixirGoogleCerts.verfified_identity(%{n
+          once: emitted_nonce,
+          jwt: received_jwt
+        })
+
+  It returns `{:ok, profil}` or `{:error, reason}`.
   """
-  def verified_identity(%{cookie: cookie, jwt: jwt, g_csrf_token: g_csrf_token, g_nonce: g_nonce}) do
-    with true <- double_token_check(cookie, g_csrf_token),
-         {:ok,
+  def verified_identity(%{jwt: jwt, g_nonce: g_nonce}) do
+    with {:ok,
           %{
-            "aud" => aud,
-            "azp" => azp,
-            "email" => email,
-            "iss" => iss,
-            "name" => name,
-            "picture" => pic,
-            "given_name" => given_name,
             "sub" => sub,
-            "nonce" => nonce
-          }} <-
+            "name" => name,
+            "email" => email,
+            "given_name" => given_name
+          } = claims} <-
            check_identity_v1(jwt),
-         true <- check_user(aud, azp),
-         true <- check_iss(iss),
-         true <- check_nonce(nonce, g_nonce) do
-      {:ok, %{email: email, name: name, google_id: sub, picture: pic, given_name: given_name}}
+         true <- check_iss(claims["iss"]),
+         true <- check_user(claims["aud"], claims["azp"]),
+         true <- check_nonce(claims["nonce"], g_nonce) do
+      {:ok, %{email: email, name: name, google_id: sub, given_name: given_name}}
     else
       {:error, msg} -> {:error, msg}
       false -> {:error, :wrong_check}
     end
   end
 
+  @doc """
+  Uses the Google Public key in PEM format. Takes the JWT and returns `{:ok, profile}` or `{:error, reason}`
+  """
   def check_identity_v1(jwt) do
-    case Joken.peek_header(jwt) do
-      {:error, msg} ->
-        {:error, msg}
+    with {:ok, %{"kid" => kid, "alg" => alg}} <- Joken.peek_header(jwt),
+         {:ok, %{body: body}} <- fetch(@g_certs1_url) do
+      {true, %{fields: fields}, _} =
+        body
+        |> @json_lib.decode!()
+        |> Map.get(kid)
+        |> JOSE.JWK.from_pem()
+        |> JOSE.JWT.verify_strict([alg], jwt)
 
-      {:ok, %{"alg" => alg, "kid" => kid, "typ" => "JWT"}} ->
-        case fetch(@g_certs1_url) do
-          {:ok, %{body: body}} ->
-            {true, %{fields: fields}, _} =
-              body
-              |> Jason.decode!()
-              # |> Jsonrs.decode!()
-              |> Map.get(kid)
-              |> JOSE.JWK.from_pem()
-              |> JOSE.JWT.verify_strict([alg], jwt)
-
-            {:ok, fields}
-
-          {:error, msg} ->
-            {:error, msg}
-        end
+      {:ok, fields}
+    else
+      {:error, reason} -> {:error, inspect(reason)}
     end
   end
 
+  @doc """
+  Uses the Google Public key JWK. Takes the JWT and returns `{:ok, profile}` or `{:error, reason}`
+  """
   def check_identity_v3(jwt) do
-    case Joken.peek_header(jwt) do
-      {:error, msg} ->
-        {:error, msg}
-
-      {:ok, %{"kid" => kid, "alg" => alg}} ->
-        case fetch(@g_certs3_url) do
-          {:ok, %{body: body}} ->
-            %{"keys" => certs} = Jason.decode!(body)
-            # %{"keys" => certs} = Jsonrs.decode!(body)
-            cert = Enum.find(certs, fn cert -> cert["kid"] == kid end)
-            signer = Joken.Signer.create(alg, cert)
-            Joken.verify(jwt, signer, [])
-
-          {:error, msg} ->
-            {:error, msg}
-        end
+    with {:ok, %{"kid" => kid, "alg" => alg}} <- Joken.peek_header(jwt),
+         {:ok, %{body: body}} <- fetch(@g_certs3_url) do
+      %{"keys" => certs} = @json_lib.decode!(body)
+      cert = Enum.find(certs, fn cert -> cert["kid"] == kid end)
+      signer = Joken.Signer.create(alg, cert)
+      Joken.verify(jwt, signer, [])
+    else
+      {:error, reason} -> {:error, inspect(reason)}
     end
   end
 
   # decouple from HTTP client
-  def fetch(url) do
+  defp fetch(url) do
     case :httpc.request(:get, {~c"#{url}", []}, [], []) do
       {:ok, {{_version, 200, _}, _headers, body}} ->
         {:ok, %{body: body}}
@@ -199,21 +194,27 @@ defmodule ElixirGoogleCerts do
     end
   end
 
-  # token in body is equal to received cookie
-  def double_token_check(cookie, g_csrf_token), do: cookie === g_csrf_token
-
   # ---- Google post-checking recommendations
+  @doc """
+  Checks the received nonce against the one set in the HTML.
+
+  Returns `true` or `false`.
+  """
   def check_nonce(nonce, g_nonce), do: nonce === g_nonce
 
   @doc """
-  Confirm the Google_Client_ID
+  Confirm the received Google_Client_ID against the one stored in the app.
+
+  Returns `true` or `false`.
   """
   def check_user(aud, azp) do
     aud == aud() || azp == aud()
   end
 
   @doc """
-  Confirm issuer is Google Accounts
+  Confirm the received issuer is the one stored in the app.
+
+  Returns `true` or `false`.
   """
   def check_iss(iss), do: iss == @iss
   defp aud, do: System.get_env("GOOGLE_CLIENT_ID")

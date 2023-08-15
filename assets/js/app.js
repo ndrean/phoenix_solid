@@ -14,7 +14,7 @@ const csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute("content");
 
-const liveSocket = new LiveSocket("/live", Socket, {
+let liveSocket = new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
   hooks: { SolidAppHook },
 });
@@ -22,10 +22,10 @@ liveSocket.connect();
 
 // connect if there are any LiveViews on the page
 // expose liveSocket on window for web console debug logs and latency simulation:
-// >> liveSocket.enableDebug()
+window.liveSocket = liveSocket;
+liveSocket.enableDebug();
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
-// window.liveSocket = liveSocket;
 
 // Show progress bar on live navigation and form submits
 topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" });
@@ -43,3 +43,31 @@ if (fbutton) Facebook(fbutton);
 
 const online = document.getElementById("online");
 if (online) onlineStatus(online);
+/*
+const passkeys = async () => {
+  if (
+    window.PublicKeyCredential &&
+    PublicKeyCredential.isConditionalMediationAvailable &&
+    PublicKeyCredential.isConditionalMediationAvailable
+  ) {
+    try {
+      const results = await Promise.all([
+        PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(),
+        PublicKeyCredential.isConditionalMediationAvailable(),
+      ]);
+      if (results.every((r) => r === true)) {
+        console.log("Display PassKey button");
+        //  createPassKey.classList.remove('hidden')
+      } else {
+        console.log("This device does not support passkeys");
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  } else {
+    console.log("This device does not support passkeys");
+  }
+};
+
+passkeys();
+*/

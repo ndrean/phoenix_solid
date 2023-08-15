@@ -26,8 +26,8 @@ defmodule PhxSolidWeb.Endpoint do
     at: "/",
     from: :phx_solid,
     # check_origin: ["http://127.0.0.1"],
-    gzip: Mix.env() === :prod,
-    cache_control_for_etags: "public, max-age = 31_536_00",
+    gzip: true,
+    cache_control_for_etags: "public, max-age=31536000",
     only: PhxSolidWeb.static_paths()
 
   # PhxSolidWeb.static_paths defined in phx_solid_web.ex

@@ -3,11 +3,6 @@
 import Config
 
 # config :phx_solid,
-#   google_client_id: System.get_env("GOOGLE_CLIENT_ID"),
-#   google_client_secret: System.get_env("GOOGLE_CLIENT_SECRET"),
-#   google_scope: "profile email"
-
-# config :phx_solid,
 #   spa_dir: System.get_env("SPA_DIR")
 
 config :phx_solid,
@@ -17,12 +12,12 @@ config :phx_solid,
   g_auth_uri: "/users/oauth",
   g_cb_uri: "/users/one_tap"
 
-config :plug_content_security_policy,
-  report_only: true,
-  directives: %{
-    report_uri: "/csp-violation-report-endpoint/"
-  },
-  nonces_for: [:script_src]
+# config :plug_content_security_policy,
+#   report_only: true,
+#   directives: %{
+#     report_uri: "/csp-reports"
+#   },
+#   nonces_for: [:script_src]
 
 # config :phx_solid, PhxSolid.Repo,
 #   database_url: System.get_env("DATABASE_URL"),
@@ -37,11 +32,12 @@ config :plug_content_security_policy,
 
 # Configures the endpoint
 config :phx_solid, PhxSolidWeb.Endpoint,
-  url: [host: "localhost"],
+  url: [host: "localhost", port: 4000],
   render_errors: [
     formats: [html: PhxSolidWeb.ErrorHTML, json: PhxSolidWeb.ErrorJSON],
     layout: false
   ],
+  server: true,
   pubsub_server: :phx_pubsub,
   live_view: [signing_salt: "WDPkDNzDwUG1jPxEDcag+XYKvVPEEPoZ"],
   http: [ip: {0, 0, 0, 0}, port: 4000]
@@ -80,8 +76,7 @@ config :logger, :console,
   metadata: [:request_id]
 
 # Use Jason for JSON parsing in Phoenix
-# config :phoenix, json_library: Jason
-config :phoenix, json_library: Jsonrs
+config :phoenix, json_library: Jason
 # logger: false
 
 # config :logster, formatter: :json

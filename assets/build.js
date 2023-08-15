@@ -5,10 +5,6 @@ const args = process.argv.slice(2);
 const watch = args.includes("--watch");
 const deploy = args.includes("--deploy");
 
-const loader = { ".js": "jsx", ".svg": "file" };
-
-const plugins = [solidPlugin()];
-
 // Define esbuild options
 let opts = {
   entryPoints: ["js/app.js", "js/solidAppHook.js"],
@@ -17,8 +13,8 @@ let opts = {
   target: "es2021",
   outdir: "../priv/static/assets",
   external: ["*.css", "fonts/*", "images/*"],
-  loader: loader,
-  plugins: plugins,
+  loader: { ".js": "jsx", ".svg": "file" },
+  plugins: [solidPlugin()],
   format: "esm",
 };
 

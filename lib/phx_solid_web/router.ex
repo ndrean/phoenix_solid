@@ -7,9 +7,19 @@ defmodule PhxSolidWeb.Router do
   # https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid#content_security_policy
   # https://csp-evaluator.withgoogle.com/
 
-  @hostname "http://localhost:4000"
-  @csp "script-src 'nonce-f35697c2-bf93-418e-a119-8158c69a2b3a' 'nonce-0bce0d28-93ad-4f3e-9f3f-c1057b0e71b3' https://accounts.google.com/gsi/client https://connect.facebook.net/en_US/sdk.js https 'self';frame-src https://accounts.google.com/gsi/ 'self';connect-src https://accounts.google.com/gsi/   https://www.facebook.com/ 'self' wss;"
-  # report-uri http://localhost:4000/csp-report;"
+  # @hostname PhxSolid.hostname()
+
+  # @report_to PhxSolid.report_to()
+
+  # @csp (case Mix.env() do
+  #         :prod ->
+  #           "script-src 'nonce-123456789' 'nonce-f35697c2-bf93-418e-a119-8158c69a2b3a' 'nonce-0bce0d28-93ad-4f3e-9f3f-c1057b0e71b3' https://accounts.google.com/gsi/ https://connect.facebook.net/ 'self' https:#{@hostname};frame-src https://accounts.google.com/gsi/ 'self';connect-src https://accounts.google.com/gsi/   https://www.facebook.com/ 'self' wss:#{@hostname} http:#{@hostname};report-uri #{@report_to};report-to #{@report_to}"
+
+  #         _ ->
+  #           "script-src 'nonce-123456789' 'nonce-baad31ae-1280-4cef-a026-2e5f5fa13006' 'nonce-842fa7d9-8610-4180-9af1-e6ee3c47f1e7' 'nonce-123456' 'nonce-f35697c2-bf93-418e-a119-8158c69a2b3a' 'nonce-0bce0d28-93ad-4f3e-9f3f-c1057b0e71b3' https://accounts.google.com/ https://connect.facebook.net/ 'self' http:#{@hostname}/assets http:#{@hostname}/spa ;frame-src http:#{@hostname} https://accounts.google.com/gsi/ https://www.facebook.com 'self';connect-src http:#{@hostname} https:#{@hostname} https://accounts.google.com/gsi/   https://www.facebook.com/ https://graph.facebook.com/'self' ws:#{@hostname};report-uri #{@report_to};report-to #{@report_to}; object-src 'none';base-uri 'self';"
+  #       end)
+
+  # PhxSolid.csp() |> dbg()
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -18,26 +28,28 @@ defmodule PhxSolidWeb.Router do
     plug :put_root_layout, html: {PhxSolidWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :default_assigns
-
-    plug :put_secure_browser_headers
-
     plug :fetch_current_user
-    plug :g_login
-    plug :redirect_path
 
     plug(
       :put_secure_browser_headers,
       %{
-        "content-security-policy-report-only" => @csp,
+        # "content-security-policy-report-only" => @csp,
         "cross-origin-opener-policy" => "same-origin-allow-popups"
       }
     )
   end
 
   pipeline :api do
-    plug :accepts, ["json", "html"]
+    plug :accepts, ["json"]
+
+    plug :put_secure_browser_headers, %{
+      # "content-security-policy" => @csp,
+      "cross-origin-opener-policy" => "same-origin-allow-popups"
+    }
+
     post("/users/one_tap", PhxSolidWeb.OneTapController, :handle)
-    post "/csp-report", PhxSolidWeb.CspReport, :display
+    post "/csp-reports", PhxSolidWeb.CspReport, :display
+    get "/users/log_in/:token", PhxSolidWeb.UserSessionController, :create
   end
 
   scope "/", PhxSolidWeb do
@@ -46,8 +58,6 @@ defmodule PhxSolidWeb.Router do
     get "/", PageController, :home
     get "/fb_login", FbSdkController, :login
     get "/users/oauth", GController, :login
-    get "/spa", SPAController, :index
-    live "/welcome", WelcomeLive, :new
   end
 
   # Other scopes may use custom stacks.
@@ -85,7 +95,7 @@ defmodule PhxSolidWeb.Router do
     end
 
     post "/users/log_in", UserSessionController, :create
-    get "/users/log_in/:token", UserSessionController, :create
+    # get "/users/log_in/:token", UserSessionController, :create
   end
 
   scope "/", PhxSolidWeb do
@@ -95,7 +105,10 @@ defmodule PhxSolidWeb.Router do
       on_mount: [{PhxSolidWeb.UserAuth, :ensure_authenticated}] do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+      live "/welcome", WelcomeLive, :new
     end
+
+    get "/spa", SPAController, :index
   end
 
   scope "/", PhxSolidWeb do
@@ -116,24 +129,16 @@ defmodule PhxSolidWeb.Router do
     |> assign(:manifest, nil)
   end
 
-  def g_login(conn, _) do
-    Plug.Conn.put_resp_header(
-      conn,
-      "cross-origin-opener-policy",
-      "same-origin-allow-popups"
-    )
-  end
+  # def redirect_path(conn, _) do
+  #   redir_url =
+  #     %URI{
+  #       scheme: conn.scheme |> Atom.to_string(),
+  #       port: conn.port,
+  #       host: :inet.ntoa(conn.remote_ip) |> IO.iodata_to_binary(),
+  #       path: Application.get_env(Application.get_application(__MODULE__), :g_certs_cb_path)
+  #     }
+  #     |> URI.to_string()
 
-  def redirect_path(conn, _) do
-    redir_url =
-      %URI{
-        scheme: conn.scheme |> Atom.to_string(),
-        port: conn.port,
-        host: :inet.ntoa(conn.remote_ip) |> IO.iodata_to_binary(),
-        path: Application.get_env(Application.get_application(__MODULE__), :g_certs_cb_path)
-      }
-      |> URI.to_string()
-
-    assign(conn, :redi_url, redir_url)
-  end
+  #   assign(conn, :redir_url, redir_url)
+  # end
 end

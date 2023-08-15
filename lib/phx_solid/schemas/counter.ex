@@ -1,34 +1,45 @@
 defmodule PhxSolid.Counter do
   use Ecto.Schema
-  alias PhxSolid.{Repo, Counter}
+  import Ecto.Changeset
+  import Ecto.Query
+  alias PhxSolid.{Repo, Counter, Accounts.User}
 
   @moduledoc """
-  Ecto wrapper for the singleton table "counter"
+  Ecto wrapper for the table "counter"
   """
 
   schema "counter" do
     field :count, :integer
+    belongs_to :user, PhxSolid.Accounts.User
+
     timestamps()
   end
 
-  def changeset(%Counter{} = count, params) do
-    Ecto.Changeset.cast(count, params, [:count])
+  def changeset(%Counter{} = count, params \\ %{}) do
+    count
+    |> Ecto.Changeset.cast(params, [:count, :user_id])
+    |> validate_required([:count, :user_id])
   end
 
-  def update() do
-    {:ok, %{count: count}} =
-      case Repo.one(Counter) do
-        nil ->
-          %Counter{}
-          |> changeset(%{count: 1})
-          |> Repo.insert_or_update()
+  def update_counter_by_one(user_id) do
+    user = Repo.get!(User, user_id)
 
-        counter ->
-          counter
-          |> changeset(%{count: counter.count + 1})
-          |> Repo.insert_or_update()
-      end
+    counter =
+      from(c in Counter, where: c.user_id == ^user_id)
+      |> Repo.one()
 
-    count
+    case counter do
+      nil ->
+        %Counter{}
+        |> Counter.changeset(%{count: 1, user_id: user.id})
+        |> Repo.insert!()
+
+      _ ->
+        counter
+        |> Counter.changeset(%{count: counter.count + 1})
+        |> Repo.update!()
+    end
+
+    counter.count
   end
 end

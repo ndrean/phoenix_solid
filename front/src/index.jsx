@@ -13,9 +13,11 @@ import { onlineListener } from "./onlineListener";
 
 // --------- SOCKET _______
 const socket = new Socket("/socket", {
-  params: { token: window.userToken },
+  params: { token: window.userPhxToken },
 });
 socket.connect();
+console.log("userphxtoken", window.userPhxToken);
+console.log({ socket });
 export { socket };
 // -->
 

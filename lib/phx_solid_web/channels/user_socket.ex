@@ -9,14 +9,17 @@ defmodule PhxSolidWeb.UserSocket do
   ## Channels
   channel "counter:*", PhxSolidWeb.CounterChannel
   channel "info", PhxSolidWeb.InfoChannel
+  channel "bitcoin", PhxSolidWeb.BitcoinChannel
 
   @impl true
-  def connect(%{"token" => token} = _params, socket, _info) do
+  def connect(%{"token" => token}, socket, _info) do
+    Logger.debug("Connect__________#{token}")
+
     case verify(socket, token) do
       {:ok, user} ->
         # all channels will have access to these assigns
-        socket = assign(socket, name: user.name, user_token: token)
-        {:ok, socket}
+        # socket = assign(socket, name: user.name, user_token: token)
+        {:ok, assign(socket, id: user.id, name: user.email)}
 
       {:error, err} ->
         Logger.error("#{__MODULE__}: error: #{inspect(err)}")
@@ -31,17 +34,26 @@ defmodule PhxSolidWeb.UserSocket do
     :error
   end
 
+  # decode the id from the Phoenix.Token
+  # and check to the email
   defp verify(_socket, token) do
-    case PhxSolid.Token.user_check(token) do
-      {:ok, email} ->
-        case PhxSolid.SocialUser.check(:email, email, :id) do
-          {:ok, social_user} -> {:ok, social_user}
-          {:error, reason} -> {:error, reason}
-        end
-
-      {:error, reason} ->
-        {:error, reason}
+    with {:ok, id} <- PhxSolid.Token.user_check(token),
+         user <- PhxSolid.Accounts.get_user!(id) do
+      {:ok, user}
+    else
+      {:error, reason} -> {:error, reason}
     end
+
+    # case PhxSolid.Token.user_check(token) do
+    #   {:ok, email} ->
+    #     case PhxSolid.SocialUser.check(:email, email, :id) do
+    #       {:ok, social_user} -> {:ok, social_user}
+    #       {:error, reason} -> {:error, reason}
+    #     end
+
+    #   {:error, reason} ->
+    #     {:error, reason}
+    # end
   end
 
   # Socket id's are topics that allow you to identify all sockets for a given user:

@@ -17,7 +17,8 @@ defmodule PhxSolid.Application do
       {Phoenix.PubSub, name: :phx_pubsub},
       {Finch, name: PhxSolid.Finch},
       PhxSolidWeb.Endpoint,
-      PhxSolid.Observer,
+      {DynamicSupervisor, name: MyDynSup, strategy: :one_for_one},
+      # PhxSolid.Observer,
       {Cluster.Supervisor, [topologies, [name: PhxSolid.ClusterSupervisor]]}
     ]
 

@@ -1,12 +1,20 @@
-import { createSignal, For } from "solid-js";
-
+import { createEffect, createSignal, For } from "solid-js";
+import ChartCoin from "./ChartCoin";
+import Chart from "./Chart";
 import ImgSVG from "./imgSVG.jsx";
+import BauSolidCss from "bau-solidcss";
 import { headerCl, solidCl, appCl } from "./app_css.js";
 // import styles from "./App.module.css";
 // class={styles.header}
 
 import useChannel from "../useChannel.js";
 import socket from "../userSocket.js";
+
+const { css } = BauSolidCss();
+const chartCss = css`
+  display: flex;
+  justify-content: center;
+`;
 
 export default function Home() {
   const [info, setInfo] = createSignal(
@@ -41,20 +49,48 @@ export default function Home() {
   const visitCh = useChannel(socket, "counter:visits");
   visitCh.on("init_count", (resp) => setVisits(resp.count));
 
+  const bitcoinCh = useChannel(socket, "bitcoin");
+  const [stock, setStock] = createSignal(
+    { labels: [], datasets: [{ label: "bitcoin", fill: false, data: [] }] },
+    { equals: false }
+  );
+  bitcoinCh.on("new_btc_price", ({ time, bitcoin }) => {
+    console.log("entry", new Date(time), { bitcoin });
+    setStock((curr) => {
+      if (curr.labels.length > 120) {
+        curr.labels.shift();
+        curr.labels.push(new Date(time));
+        curr.datasets[0].data.shift();
+        curr.datasets[0].data.push(parseFloat(bitcoin).toFixed(2));
+      } else {
+        curr.labels.push(new Date(time));
+        curr.datasets[0].data.push(parseFloat(bitcoin).toFixed(2));
+      }
+      return curr;
+    });
+  });
+
+  createEffect(() => {
+    console.log("stock", stock());
+  });
+
   return (
     <div class={appCl}>
       <header class={headerCl}>
-        <h1>Phoenix renders SolidJS</h1>
+        <h1>Hi from SolidJS</h1>
         <br />
         <p class={solidCl}>
           <ImgSVG
             class={solidCl}
             alt="solid"
             src="/images/solid.svg"
-            size="160px"
+            size="100px"
           />
         </p>
         <br />
+        <div class={chartCss}>
+          <ChartCoin data={stock()} />
+        </div>
 
         <h2>Welcome {info().user}</h2>
         <p>This page has been visited {visits()} time(s)</p>

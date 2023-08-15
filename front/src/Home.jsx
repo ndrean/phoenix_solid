@@ -45,7 +45,7 @@ export default function Home() {
   return (
     <div class={appCl}>
       <header class={headerCl}>
-        <h1>Phoenix renders SolidJS</h1>
+        <h1>Hello from SolidJS</h1>
         <br />
         <img src={logo} class={solidCl} alt="solid" />
         <br />

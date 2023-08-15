@@ -4,17 +4,25 @@
     <meta charset="utf-8" />
     <meta name="description" content="run an SPA through PHoenix" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="csrf-token" content={get_csrf_token()} />
-    <%!-- <meta name="referrer" content="no-referrer-when-downgrade" /> --%>
+    <title>Render SolidJS in a Phoenix app</title>
+    <meta name="csrf-token" content={Plug.CSRFProtection.get_csrf_token()} />
 
     <script nonce="f35697c2-bf93-418e-a119-8158c69a2b3a">
-      window.userToken = "<%= assigns[:user_token] %>";
+      window.userPhxToken = "<%= assigns[:user_phx_token] %>";
     </script>
+
     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
-    <script defer phx-track-static type="module" type="text/javascript" src={~p"/assets/app.js"}>
+    <script
+      nonce="123456789"
+      defer
+      phx-track-static
+      type="module"
+      type="text/javascript"
+      src={~p"/assets/app.js"}
+    >
     </script>
   </head>
-  <body class="bg-gray-300 antialiased">
+  <body class="bg-white antialiased">
     <%= @inner_content %>
   </body>
 </html>

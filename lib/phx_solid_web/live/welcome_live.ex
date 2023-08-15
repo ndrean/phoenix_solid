@@ -12,31 +12,18 @@ defmodule PhxSolidWeb.WelcomeLive do
     ~H"""
     <Nav.render active={@active} display={@display} />
     <SolidApp.render />
-    <UserProfile.render profile={@profile} logs={@logs} origin={@origin} />
+    <UserProfile.render current_user={@current_user} />
+    <%!-- <section class="min-h-screen flex items-center justify-center bg-[midnightblue]">
+      <iframe cl ass="w-full max-w-md" height="600" src={~p"/spa"}></iframe>
+    </section> --%>
     """
   end
 
   @impl true
-  def mount(_params, session, socket) do
-    %{
-      "user_token" => user_token,
-      "profile" => profile,
-      "logs" => logs,
-      "origin" => origin
-    } =
-      session
+  def mount(_params, %{"user_token" => user_token} = _session, socket) do
+    if connected?(socket), do: Logger.info("LV Connected")
 
-    if connected?(socket) do
-      Logger.info("LV Connected")
-    end
-
-    {:ok,
-     assign(socket,
-       user_token: user_token,
-       profile: profile,
-       origin: origin,
-       logs: logs
-     )}
+    {:ok, assign(socket, user_token: user_token)}
   end
 
   # the event of changing the url is captured with handle_params
