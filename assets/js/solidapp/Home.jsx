@@ -56,14 +56,15 @@ export default function Home() {
   );
   bitcoinCh.on("new_btc_price", ({ time, bitcoin }) => {
     console.log("entry", new Date(time), { bitcoin });
+    const evtTime = new Date(time).toLocaleTimeString();
     setStock((curr) => {
       if (curr.labels.length > 120) {
         curr.labels.shift();
-        curr.labels.push(new Date(time));
+        curr.labels.push(evtTime);
         curr.datasets[0].data.shift();
         curr.datasets[0].data.push(parseFloat(bitcoin).toFixed(2));
       } else {
-        curr.labels.push(new Date(time));
+        curr.labels.push(evtTime);
         curr.datasets[0].data.push(parseFloat(bitcoin).toFixed(2));
       }
       return curr;
@@ -77,14 +78,14 @@ export default function Home() {
   return (
     <div class={appCl}>
       <header class={headerCl}>
-        <h1>Hi from SolidJS</h1>
+        <h1>Welcome {info().user}</h1>
         <br />
         <p class={solidCl}>
           <ImgSVG
             class={solidCl}
             alt="solid"
             src="/images/solid.svg"
-            size="100px"
+            size="80px"
           />
         </p>
         <br />
@@ -92,7 +93,6 @@ export default function Home() {
           <ChartCoin data={stock()} />
         </div>
 
-        <h2>Welcome {info().user}</h2>
         <p>This page has been visited {visits()} time(s)</p>
         <p>Memory usage: {info().memory} Mo</p>
         <br />

@@ -27,10 +27,10 @@ defmodule PhxSolid.Streamer do
     {:reconnect, state}
   end
 
-  def handle_frame({:text, msg}, state) do
+  def handle_frame({:text, msg}, %{symbol: symbol} = state) do
     case @json_lib.decode(msg) do
       {:ok, event} ->
-        process(event)
+        process(event, symbol)
         {:ok, state}
 
       {:error, reason} ->
@@ -41,8 +41,9 @@ defmodule PhxSolid.Streamer do
     {:ok, state}
   end
 
-  def process(event) do
+  def process(event, symbol) do
+    binding() |> dbg()
     event = Map.put(event, :time, DateTime.utc_now())
-    :ok = PhxSolidWeb.Endpoint.broadcast_from(self(), "bitcoin", "new_btc", event)
+    :ok = PhxSolidWeb.Endpoint.broadcast_from(self(), symbol, "new_#{symbol}", event)
   end
 end

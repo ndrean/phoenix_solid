@@ -24,6 +24,8 @@ defmodule PhxSolid.Application do
 
     opts = [strategy: :one_for_one, name: PhxSolid.Supervisor]
     Supervisor.start_link(children, opts)
+
+    PhxSolid.Stream.start_sup("bitcoin")
   end
 
   # Tell Phoenix to update the endpoint configuration whenever the application is updated.

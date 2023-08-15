@@ -13,12 +13,9 @@ defmodule PhxSolidWeb.UserSocket do
 
   @impl true
   def connect(%{"token" => token}, socket, _info) do
-    Logger.debug("Connect__________#{token}")
-
     case verify(socket, token) do
       {:ok, user} ->
         # all channels will have access to these assigns
-        # socket = assign(socket, name: user.name, user_token: token)
         {:ok, assign(socket, id: user.id, name: user.email)}
 
       {:error, err} ->
@@ -34,8 +31,7 @@ defmodule PhxSolidWeb.UserSocket do
     :error
   end
 
-  # decode the id from the Phoenix.Token
-  # and check to the email
+  # decode the id from the Phoenix.Token and check to the email
   defp verify(_socket, token) do
     with {:ok, id} <- PhxSolid.Token.user_check(token),
          user <- PhxSolid.Accounts.get_user!(id) do

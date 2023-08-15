@@ -13,6 +13,15 @@ export default (props) => {
 
     backgroundColor: "#FFFFFF",
     borderColor: "#36A2EB",
+    plugins: {
+      title: {
+        display: true,
+        text: "Solid Chart.js: Bitcoin from CoinCap.IO",
+      },
+      colors: {
+        forceOverride: true,
+      },
+    },
   };
 
   return <Line data={props.data} options={options} width={350} height={200} />;
