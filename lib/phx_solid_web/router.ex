@@ -106,9 +106,11 @@ defmodule PhxSolidWeb.Router do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
       live "/welcome", WelcomeLive, :new
+      live "/spa", SpaLive, :new
+      get "/serve_spa", SPAController, :index
     end
 
-    get "/spa", SPAController, :index
+    # get "/spa", SPAController, :index
   end
 
   scope "/", PhxSolidWeb do

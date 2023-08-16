@@ -34,13 +34,20 @@ defmodule PhxSolidWeb.InfoChannel do
     {:noreply, socket}
   end
 
-  defp get_info(name) do
-    %{
-      curr_node: node(),
-      cookie: Node.get_cookie(),
-      user: name,
-      connected_nodes: Node.list(:connected),
-      memory: div(:erlang.memory(:total), 1_000_000)
-    }
+  defp get_info(name) when is_binary(name) do
+    try do
+      %{
+        curr_node: node(),
+        cookie: Node.get_cookie(),
+        user: name,
+        connected_nodes: Node.list(:connected),
+        memory: div(:erlang.memory(:total), 1_000_000)
+      }
+    rescue
+      _ ->
+        %{}
+    end
   end
+
+  defp get_info(_), do: %{}
 end

@@ -2,7 +2,7 @@ defmodule PhxSolidWeb.WelcomeLive do
   use PhxSolidWeb, :live_view
   on_mount PhxSolidWeb.UserLiveAuth
 
-  alias PhxSolidWeb.{SolidApp, UserProfile, Nav}
+  alias PhxSolidWeb.{SolidApp, UserProfile}
   require Logger
 
   @nav_elts ["#solid", "#profile"]
@@ -10,12 +10,9 @@ defmodule PhxSolidWeb.WelcomeLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Nav.render active={@active} display={@display} />
+    <%!-- <Nav.render active={@active} display={@display} /> --%>
     <SolidApp.render />
     <UserProfile.render current_user={@current_user} />
-    <%!-- <section class="min-h-screen flex items-center justify-center bg-[midnightblue]">
-      <iframe cl ass="w-full max-w-md" height="600" src={~p"/spa"}></iframe>
-    </section> --%>
     """
   end
 

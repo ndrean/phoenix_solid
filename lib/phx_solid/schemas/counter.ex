@@ -22,24 +22,33 @@ defmodule PhxSolid.Counter do
   end
 
   def update_counter_by_one(user_id) do
-    user = Repo.get!(User, user_id)
+    Repo.transaction(fn ->
+      user = get_user(user_id)
+      update_counter(user)
+    end)
+  end
 
+  defp get_user(user_id) do
+    Repo.get!(User, user_id)
+  end
+
+  defp update_counter(user) do
     counter =
-      from(c in Counter, where: c.user_id == ^user_id)
+      from(c in Counter, where: c.user_id == ^user.id)
       |> Repo.one()
 
-    case counter do
-      nil ->
-        %Counter{}
-        |> Counter.changeset(%{count: 1, user_id: user.id})
-        |> Repo.insert!()
+    new_counter_data =
+      case counter do
+        nil ->
+          %{count: 1, user_id: user.id}
 
-      _ ->
-        counter
-        |> Counter.changeset(%{count: counter.count + 1})
-        |> Repo.update!()
-    end
+        _ ->
+          %{count: counter.count + 1}
+      end
 
-    counter.count
+    counter
+    |> Counter.changeset(new_counter_data)
+    |> Repo.insert_or_update!()
+    |> Map.get(:count)
   end
 end

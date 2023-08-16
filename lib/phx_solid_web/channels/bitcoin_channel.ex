@@ -9,10 +9,12 @@ defmodule PhxSolidWeb.BitcoinChannel do
 
   @impl true
   def join("bitcoin", %{"user_token" => user_token}, socket) do
-    if authorized?(user_token) do
-      {:ok, socket}
-    else
-      {:error, %{reason: "unauthorized"}}
+    case authorized?(user_token) do
+      true ->
+        {:ok, socket}
+
+      false ->
+        {:error, %{reason: "unauthorized"}}
     end
   end
 
@@ -20,6 +22,7 @@ defmodule PhxSolidWeb.BitcoinChannel do
   intercept ["new_bitcoin"]
 
   def handle_out("new_bitcoin", event, socket) do
+    Logger.debug("OUT_____")
     :ok = push(socket, "new_btc_price", event)
     {:noreply, socket}
   end

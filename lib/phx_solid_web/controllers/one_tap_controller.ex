@@ -6,13 +6,14 @@ defmodule PhxSolidWeb.OneTapController do
   require Logger
 
   def check_csrf(conn, _opts) do
-    conn.req_cookies
-    cookie = conn.cookies["g_csrf_token"]
-    g_csrf = conn.params["g_csrf_token"]
+    csrf_key = "g_csrf_token"
 
-    if g_csrf !== cookie do
+    g_csrf_cookies = Map.get(conn.req_cookies, csrf_key)
+    g_csrf_params = Map.get(conn.params, csrf_key)
+
+    if g_csrf_cookies !== g_csrf_params do
       conn
-      |> put_flash(:error, "Bad response")
+      |> put_flash(:error, "CSRF token mismatch")
       |> redirect(to: ~p"/")
       |> halt()
     else

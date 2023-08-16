@@ -24,7 +24,7 @@ defmodule PhxSolid.Repo.Migrations.CreateUsersAuthTables do
 
     create_if_not_exists table("counter") do
       add(:count, :integer)
-      add :logs, :integer, default: 1
+      add :logs, :integer
       add :user_id, references(:users, on_delete: :delete_all), null: false
       timestamps()
     end

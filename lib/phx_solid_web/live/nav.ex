@@ -11,7 +11,8 @@ defmodule PhxSolidWeb.Nav do
     <nav class="px-4 sm:px-6 lg:px-8  bg-slate-800 text-white" id="nav">
       <div class="flex justify-between content-center">
         <div class="flex py-3 text-sm" phx-mounted={@display.("#profile")}>
-          <.link class="flex items-center border rounded-md p-2 mr-2" href={~p"/spa"}>
+          <%!-- <.live_component module={SpaLive} od="spa_iframe" /> --%>
+          <.link class="flex items-center border rounded-md p-2 mr-2" navigate={~p"/spa"}>
             <img src={~p"/images/solid.svg"} width="36" />
             <span>SPA</span>
           </.link>
